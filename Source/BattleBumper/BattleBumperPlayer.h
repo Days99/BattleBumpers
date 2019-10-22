@@ -1,0 +1,50 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Pawn.h"
+#include "BattleBumperPlayer.generated.h"
+
+UCLASS()
+class BATTLEBUMPER_API ABattleBumperPlayer : public APawn
+{
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	ABattleBumperPlayer();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(EditAnywhere)
+	USceneComponent* OurVisibleComponent;
+	//Input functions
+	void Move_XAxis(float AxisValue);
+	void Move_YAxis(float AxisValue);
+	void StartGrowing();
+	void StopGrowing();
+
+
+	//Input variables
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	FVector CurrentVelocity;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float maxVelocityX = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float maxVelocityY = 10;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float drag = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	FVector CurrentAcceleration;
+	bool bGrowing;
+
+};
