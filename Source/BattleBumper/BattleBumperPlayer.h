@@ -44,9 +44,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxVelocityY = 30;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float drag = 2;
+	float dragX = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float dragZ = 2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentAcceleration;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	FRotator CurrentRotation;
 	bool bGrowing;
 
 };

@@ -55,25 +55,47 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	CurrentScale = FMath::Clamp(CurrentScale, 1.0f, 2.0f);
 	OurVisibleComponent->SetWorldScale3D(FVector(CurrentScale));
 
-	CurrentVelocity.X += CurrentAcceleration.X / 10;
 
-	//if (CurrentVelocity.X > drag) 
-	//{
-	//	CurrentAcceleration.X -= drag;
-	//}
-	//else if(CurrentVelocity.X < -drag)
-	//{
-	//	CurrentAcceleration.X += drag;
-	//}
+
+	if (CurrentVelocity.X > dragX&& CurrentAcceleration.X == 0)
+	{
+		CurrentAcceleration.X -= dragX;
+	}
+	if (CurrentVelocity.X < -dragX && CurrentAcceleration.X == 0)
+	{
+		CurrentAcceleration.X += dragX;
+	}
+	if (CurrentRotation.Yaw > dragZ && CurrentAcceleration.Y == 0)
+	{
+		CurrentAcceleration.Y -= dragZ;
+	}
+	if (CurrentRotation.Yaw < -dragZ && CurrentAcceleration.Y == 0)
+	{
+		CurrentAcceleration.Y += dragZ;
+	}
+	if (CurrentAcceleration.X == 0) {
+		CurrentVelocity.X = 0;
+		maxVelocityY = 10;
+	}
+	else {
+		maxVelocityY = 30;
+		CurrentVelocity.X += CurrentAcceleration.X / 10;
+	}
+
+	if (CurrentAcceleration.Y == 0) {
+		CurrentRotation.Add(0, -CurrentRotation.Yaw, 0);
+	}
+	else  
+	CurrentRotation.Add(0, CurrentAcceleration.Y / 10,0);
 
 	if (CurrentVelocity.X > maxVelocityX && CurrentAcceleration.X > 0) 
 	{
 		CurrentVelocity.X = maxVelocityX;
 	}
 	
-	if(CurrentVelocity.Y > maxVelocityY && CurrentAcceleration.Y > 0)
+	if(CurrentRotation.Yaw > maxVelocityY && CurrentAcceleration.Y > 0)
 	{
-		CurrentVelocity.Y = maxVelocityY;
+		CurrentRotation.Yaw = maxVelocityY;
 	}
 	
 	if (CurrentVelocity.X < -maxVelocityX && CurrentAcceleration.X < 0)
@@ -81,23 +103,20 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		CurrentVelocity.X = -maxVelocityX;
 	}
 	
-	if (CurrentVelocity.Y < -maxVelocityY && CurrentAcceleration.Y < 0)
+	if (CurrentRotation.Yaw < -maxVelocityY && CurrentAcceleration.Y < 0)
 	{
-		CurrentVelocity.Y = -maxVelocityY;
+		CurrentRotation.Yaw = -maxVelocityY;
 	}
-	if (CurrentVelocity.X != 0) {
-		CurrentVelocity.Y += CurrentAcceleration.Y;
-	}
-	else
-		CurrentVelocity.Y = 0;
+
 
 
 	// Handle movement based on our "MoveX" and "MoveY" axes
 
-	if (!CurrentVelocity.IsZero())
+	if (!CurrentVelocity.IsZero() || !CurrentRotation.IsZero())
 	{
-		FVector NewLocation = GetActorLocation() + (CurrentVelocity * DeltaTime);
-		SetActorLocation(NewLocation);
+		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
+		FVector NewLocation = GetActorLocation() + (GetActorForwardVector() * CurrentVelocity.X * DeltaTime);
+		SetActorLocationAndRotation(NewLocation, NewRotation);
 	}
 }
 
@@ -117,11 +136,11 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 void ABattleBumperPlayer::Move_XAxis(float AxisValue)
 {
 	// Move at 100 units per second forward or backward
-	CurrentAcceleration.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxAccelaration * 100;
+	CurrentAcceleration.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxAccelaration;
 	if (CurrentAcceleration.X > maxAccelaration) {
 		CurrentAcceleration.X = maxAccelaration;
 	}
-	else if (CurrentAcceleration.X < -maxAccelaration) {
+	if (CurrentAcceleration.X < -maxAccelaration) {
 		CurrentAcceleration.X = -maxAccelaration;
 	}
 }
@@ -129,11 +148,11 @@ void ABattleBumperPlayer::Move_XAxis(float AxisValue)
 void ABattleBumperPlayer::Move_YAxis(float AxisValue)
 {
 	// Move at 100 units per second right or left
-	CurrentAcceleration.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxVelocityY  * 40;
+	CurrentAcceleration.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxVelocityY;
 	if (CurrentAcceleration.Y > maxVelocityY) {
 		CurrentAcceleration.Y = maxVelocityY;
 	}
-	else if (CurrentAcceleration.Y < -maxVelocityY) {
+	if (CurrentAcceleration.Y < -maxVelocityY) {
 		CurrentAcceleration.Y = -maxVelocityY;
 	}
 }
