@@ -55,15 +55,17 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	CurrentScale = FMath::Clamp(CurrentScale, 1.0f, 2.0f);
 	OurVisibleComponent->SetWorldScale3D(FVector(CurrentScale));
 
+	CurrentVelocity.X += CurrentAcceleration.X / 10;
 
-	if (CurrentVelocity.X > drag) 
-	{
-		CurrentAcceleration.X -= drag;
-	}
-	else
-	{
-		CurrentAcceleration.X += drag;
-	}
+	//if (CurrentVelocity.X > drag) 
+	//{
+	//	CurrentAcceleration.X -= drag;
+	//}
+	//else if(CurrentVelocity.X < -drag)
+	//{
+	//	CurrentAcceleration.X += drag;
+	//}
+
 	if (CurrentVelocity.X > maxVelocityX && CurrentAcceleration.X > 0) 
 	{
 		CurrentVelocity.X = maxVelocityX;
@@ -83,7 +85,12 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentVelocity.Y = -maxVelocityY;
 	}
-	CurrentVelocity += CurrentAcceleration;
+	if (CurrentVelocity.X != 0) {
+		CurrentVelocity.Y += CurrentAcceleration.Y;
+	}
+	else
+		CurrentVelocity.Y = 0;
+
 
 	// Handle movement based on our "MoveX" and "MoveY" axes
 
@@ -110,13 +117,25 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 void ABattleBumperPlayer::Move_XAxis(float AxisValue)
 {
 	// Move at 100 units per second forward or backward
-	CurrentAcceleration.X += FMath::Clamp(AxisValue, -1.0f, 1.0f) * (maxVelocityX / 10);
+	CurrentAcceleration.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxAccelaration * 100;
+	if (CurrentAcceleration.X > maxAccelaration) {
+		CurrentAcceleration.X = maxAccelaration;
+	}
+	else if (CurrentAcceleration.X < -maxAccelaration) {
+		CurrentAcceleration.X = -maxAccelaration;
+	}
 }
 
 void ABattleBumperPlayer::Move_YAxis(float AxisValue)
 {
 	// Move at 100 units per second right or left
-	CurrentAcceleration.Y += FMath::Clamp(AxisValue, -1.0f, 1.0f) * (maxVelocityY / 10);
+	CurrentAcceleration.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxVelocityY  * 40;
+	if (CurrentAcceleration.Y > maxVelocityY) {
+		CurrentAcceleration.Y = maxVelocityY;
+	}
+	else if (CurrentAcceleration.Y < -maxVelocityY) {
+		CurrentAcceleration.Y = -maxVelocityY;
+	}
 }
 
 void ABattleBumperPlayer::StartGrowing()
