@@ -51,6 +51,8 @@ public:
 	FVector CurrentAcceleration;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FRotator CurrentRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
+	int PlayerID;
 	bool bGrowing;
 
 };

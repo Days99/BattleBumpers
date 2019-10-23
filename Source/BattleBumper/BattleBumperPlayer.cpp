@@ -10,7 +10,11 @@
 // Sets default values
 ABattleBumperPlayer::ABattleBumperPlayer()
 {
+	if(PlayerID == 0)
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
+	else if(PlayerID == 1)
+	AutoPossessPlayer = EAutoReceiveInput::Player1;
+
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	// Create a dummy root component we can attach things to.
