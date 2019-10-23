@@ -1,10 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "BattleBumperPlayer.generated.h"
+
 
 UCLASS()
 class BATTLEBUMPER_API ABattleBumperPlayer : public APawn
@@ -33,12 +35,24 @@ public:
 	void StartGrowing();
 	void StopGrowing();
 
+	void mouseYawn(float axis);
+	void mousePitch(float axis);
 
+	//Vector
+	FVector2D mouseInput;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	USpringArmComponent* springArm;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UCameraComponent* camera;
 	//Input variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float maxVelocityX = 350;
+	float maxVelocityX = 400;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float maxVelocityRX = -250;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxAccelaration = 30;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -52,5 +66,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FRotator CurrentRotation;
 	bool bGrowing;
-
+	
 };

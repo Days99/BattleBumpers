@@ -16,14 +16,22 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// Create a dummy root component we can attach things to.
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 	// Create a camera and a visible object
-	UCameraComponent* OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
+
+	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	
+
+	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
 	OurVisibleComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OurVisibleComponent"));
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
-	OurCamera->SetupAttachment(RootComponent);
-	OurCamera->SetRelativeLocation(FVector(-250.0f, 0.0f, 250.0f));
-	OurCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
-	OurVisibleComponent->SetupAttachment(RootComponent);
+	springArm->AttachTo(RootComponent);
+	springArm->TargetArmLength = 350.0f;
+	springArm->SetWorldRotation(FRotator(-60.f,0.0f,0.0f));
 
+	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
+	camera->SetRelativeLocation(FVector(-250.0f, 0.0f, 250.0f));
+	camera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
+	OurVisibleComponent->SetupAttachment(springArm);
+	
 }
 
 // Called when the game starts or when spawned
@@ -39,6 +47,18 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// Handle growing and shrinking based on our "Grow" action
+
+	FRotator newYawn = GetActorRotation();
+	
+	newYawn.Yaw += mouseInput.X;
+	SetActorRotation(newYawn);
+
+	FRotator newPitch = springArm->GetComponentRotation();
+	newPitch.Pitch = FMath::Clamp(newPitch.Pitch + mouseInput.Y, -80.0f,0.0f);
+	springArm->SetWorldRotation(newPitch);
+
+
+
 
 	float CurrentScale = OurVisibleComponent->GetComponentScale().X;
 	if (bGrowing)
@@ -57,7 +77,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 
-	if (CurrentVelocity.X > dragX&& CurrentAcceleration.X == 0)
+	if (CurrentVelocity.X > dragX && CurrentAcceleration.X == 0)
 	{
 		CurrentAcceleration.X -= dragX;
 	}
@@ -92,15 +112,15 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentVelocity.X = maxVelocityX;
 	}
+
+	if (CurrentVelocity.X < maxVelocityRX && CurrentAcceleration.X < 0)
+	{
+		CurrentVelocity.X = maxVelocityRX;
+	}
 	
 	if(CurrentRotation.Yaw > maxVelocityY && CurrentAcceleration.Y > 0)
 	{
 		CurrentRotation.Yaw = maxVelocityY;
-	}
-	
-	if (CurrentVelocity.X < -maxVelocityX && CurrentAcceleration.X < 0)
-	{
-		CurrentVelocity.X = -maxVelocityX;
 	}
 	
 	if (CurrentRotation.Yaw < -maxVelocityY && CurrentAcceleration.Y < 0)
@@ -127,6 +147,9 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	// Respond when our "Grow" key is pressed or released.
 	InputComponent->BindAction("Grow", IE_Pressed, this, &ABattleBumperPlayer::StartGrowing);
 	InputComponent->BindAction("Grow", IE_Released, this, &ABattleBumperPlayer::StopGrowing);
+
+	InputComponent->BindAxis("MouseYawn", this, &ABattleBumperPlayer::mouseYawn);
+	InputComponent->BindAxis("MousePitch", this, &ABattleBumperPlayer::mousePitch);
 
 	// Respond every frame to the values of our two movement axes, "MoveForward" and "MoveRight".
 	InputComponent->BindAxis("MoveForward", this, &ABattleBumperPlayer::Move_XAxis);
@@ -155,6 +178,16 @@ void ABattleBumperPlayer::Move_YAxis(float AxisValue)
 	if (CurrentAcceleration.Y < -maxVelocityY) {
 		CurrentAcceleration.Y = -maxVelocityY;
 	}
+}
+
+void ABattleBumperPlayer::mouseYawn(float axis)
+{
+	mouseInput.X = axis;
+}
+
+void ABattleBumperPlayer::mousePitch(float axis)
+{
+	mouseInput.Y = axis;
 }
 
 void ABattleBumperPlayer::StartGrowing()
