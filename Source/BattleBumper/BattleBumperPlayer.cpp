@@ -27,6 +27,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
 	springArm->AttachTo(RootComponent);
 	springArm->TargetArmLength = 450.0f;
+	
 	springArm->SetWorldRotation(FRotator(-60.f,0.0f,0.0f));
 
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
