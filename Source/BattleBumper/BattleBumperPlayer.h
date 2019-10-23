@@ -46,6 +46,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	UCameraComponent* camera;
+
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* mesh;
 	//Input variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;

@@ -14,23 +14,23 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	// Create a dummy root component we can attach things to.
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	
 	// Create a camera and a visible object
 
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	
+	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
+
+	RootComponent = mesh;
 
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
 	OurVisibleComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OurVisibleComponent"));
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
 	springArm->AttachTo(RootComponent);
-	springArm->TargetArmLength = 350.0f;
+	springArm->TargetArmLength = 450.0f;
 	springArm->SetWorldRotation(FRotator(-60.f,0.0f,0.0f));
 
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
-	camera->SetRelativeLocation(FVector(-250.0f, 0.0f, 250.0f));
-	camera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
-	OurVisibleComponent->SetupAttachment(springArm);
+	
 	
 }
 
@@ -51,9 +51,10 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	FRotator newYawn = GetActorRotation();
 	
 	newYawn.Yaw += mouseInput.X;
-	SetActorRotation(newYawn);
+	
 
 	FRotator newPitch = springArm->GetComponentRotation();
+	newPitch.Yaw += mouseInput.X;
 	newPitch.Pitch += mouseInput.Y;
 	springArm->SetWorldRotation(newPitch);
 
