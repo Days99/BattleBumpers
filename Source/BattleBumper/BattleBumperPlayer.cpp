@@ -92,14 +92,17 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentAcceleration.Y += dragZ;
 	}
-	if (CurrentAcceleration.X == 0) {
-		CurrentVelocity.X = 0;
+
+	if (CurrentVelocity.X == 0) {
 		maxVelocityY = 10;
 	}
 	else {
 		maxVelocityY = 30;
-		CurrentVelocity.X += CurrentAcceleration.X / 10;
 	}
+	if (!uHandbrake)
+		CurrentVelocity.X += CurrentAcceleration.X / 10;
+	else if(uHandbrake && (CurrentVelocity.X > 0) || (CurrentVelocity.X < 0))
+		CurrentVelocity.X += HandbrakeAccelaration;
 
 	if (CurrentAcceleration.Y == 0) {
 		CurrentRotation.Add(0, -CurrentRotation.Yaw, 0);
@@ -117,15 +120,22 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		CurrentVelocity.X = maxVelocityRX;
 	}
 	
-	if(CurrentRotation.Yaw > maxVelocityY && CurrentAcceleration.Y > 0)
+	if(CurrentRotation.Yaw > maxVelocityY && CurrentAcceleration.Y > 0 && !uHandbrake)
 	{
 		CurrentRotation.Yaw = maxVelocityY;
 	}
+	else if (uHandbrake && CurrentRotation.Yaw > maxVelocityY * 3) {
+		CurrentRotation.Yaw = maxVelocityY * 3;
+	}
 	
-	if (CurrentRotation.Yaw < -maxVelocityY && CurrentAcceleration.Y < 0)
+	if (CurrentRotation.Yaw < -maxVelocityY && CurrentAcceleration.Y < 0 && !uHandbrake)
 	{
 		CurrentRotation.Yaw = -maxVelocityY;
 	}
+	else if (uHandbrake && CurrentRotation.Yaw < -maxVelocityY * 3) {
+		CurrentRotation.Yaw = -maxVelocityY * 3;
+	}
+
 
 
 
@@ -153,7 +163,32 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	// Respond every frame to the values of our two movement axes, "MoveForward" and "MoveRight".
 	InputComponent->BindAxis("MoveForward", this, &ABattleBumperPlayer::Move_XAxis);
 	InputComponent->BindAxis("MoveRight", this, &ABattleBumperPlayer::Move_YAxis);
+	InputComponent->BindAction("Handbrake", IE_Pressed,  this, &ABattleBumperPlayer::Handbrake);
+	InputComponent->BindAction("Handbrake", IE_Released, this, &ABattleBumperPlayer::ReleaseHandbrake);
+
 }
+
+void ABattleBumperPlayer::Handbrake() {
+	uHandbrake = true;
+	float direction = 1;
+	if (CurrentRotation.Yaw < 0)
+		direction *= -1;
+	if (CurrentVelocity.X > 0)
+		HandbrakeAccelaration = -4;
+	else
+		HandbrakeAccelaration = 2;
+	CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 3;
+}
+
+void ABattleBumperPlayer::ReleaseHandbrake() {
+	uHandbrake = false;
+	if (CurrentRotation.Yaw < 0) {
+		CurrentRotation.Yaw = -maxVelocityY;
+	}
+	else
+		CurrentRotation.Yaw = maxVelocityY;
+}
+
 
 void ABattleBumperPlayer::Move_XAxis(float AxisValue)
 {

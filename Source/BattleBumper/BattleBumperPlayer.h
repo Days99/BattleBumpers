@@ -32,6 +32,9 @@ public:
 	//Input functions
 	void Move_XAxis(float AxisValue);
 	void Move_YAxis(float AxisValue);
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void Handbrake();
+	void ReleaseHandbrake();
 	void StartGrowing();
 	void StopGrowing();
 
@@ -68,8 +71,12 @@ public:
 	FVector CurrentAcceleration;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FRotator CurrentRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float HandbrakeAccelaration;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	int PlayerID;
 	bool bGrowing;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool uHandbrake = false;
 	
 };
