@@ -32,6 +32,17 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
 	
+	// Create a particle system that we can activate or deactivate
+	OurParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MovementParticles"));
+	OurParticleSystem->SetupAttachment(RootComponent);
+	OurParticleSystem->bAutoActivate = false;
+	OurParticleSystem->SetRelativeLocation(FVector(-20.0f, 0.0f, 20.0f));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticleAsset(TEXT("/Game/StarterContent/Particles/P_Fire.P_Fire"));
+	if (ParticleAsset.Succeeded())
+	{
+		OurParticleSystem->SetTemplate(ParticleAsset.Object);
+	}
+
 	
 }
 

@@ -81,4 +81,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool uHandbrake = false;
 	
+	UParticleSystemComponent* OurParticleSystem;
 };
