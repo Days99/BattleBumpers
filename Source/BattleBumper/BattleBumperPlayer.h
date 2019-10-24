@@ -72,7 +72,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FRotator CurrentRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float HandbrakeAccelaration;
+	float HandbrakeAccelaration = -4;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	int PlayerID;
 	bool bGrowing;

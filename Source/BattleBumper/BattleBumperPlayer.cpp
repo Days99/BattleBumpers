@@ -102,8 +102,20 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	}
 	if (!uHandbrake)
 		CurrentVelocity.X += CurrentAcceleration.X / 10;
-	else if(uHandbrake && (CurrentVelocity.X > 0) || (CurrentVelocity.X < 0))
+	else if (uHandbrake && CurrentVelocity.X > 0) {
+		if (CurrentVelocity.X < HandbrakeAccelaration) {
+			CurrentVelocity.X = 0;
+		}
+		else
 		CurrentVelocity.X += HandbrakeAccelaration;
+	}
+	else if (uHandbrake && CurrentVelocity.X < 0) {
+		if (CurrentVelocity.X > HandbrakeAccelaration) {
+			CurrentVelocity.X = 0;
+		}
+		else
+		CurrentVelocity.X -= HandbrakeAccelaration;
+	}
 
 	if (CurrentAcceleration.Y == 0) {
 		CurrentRotation.Add(0, -CurrentRotation.Yaw, 0);
@@ -125,16 +137,16 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentRotation.Yaw = maxVelocityY;
 	}
-	else if (uHandbrake && CurrentRotation.Yaw > maxVelocityY * 3) {
-		CurrentRotation.Yaw = maxVelocityY * 3;
+	else if (uHandbrake && CurrentRotation.Yaw > maxVelocityY * 4) {
+		CurrentRotation.Yaw = maxVelocityY * 4;
 	}
 	
 	if (CurrentRotation.Yaw < -maxVelocityY && CurrentAcceleration.Y < 0 && !uHandbrake)
 	{
 		CurrentRotation.Yaw = -maxVelocityY;
 	}
-	else if (uHandbrake && CurrentRotation.Yaw < -maxVelocityY * 3) {
-		CurrentRotation.Yaw = -maxVelocityY * 3;
+	else if (uHandbrake && CurrentRotation.Yaw < -maxVelocityY * 4) {
+		CurrentRotation.Yaw = -maxVelocityY * 4;
 	}
 
 
@@ -174,11 +186,8 @@ void ABattleBumperPlayer::Handbrake() {
 	float direction = 1;
 	if (CurrentRotation.Yaw < 0)
 		direction *= -1;
-	if (CurrentVelocity.X > 0)
-		HandbrakeAccelaration = -4;
-	else
-		HandbrakeAccelaration = 2;
-	CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 3;
+	if(CurrentAcceleration.X == 0)
+	CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 2;
 }
 
 void ABattleBumperPlayer::ReleaseHandbrake() {
