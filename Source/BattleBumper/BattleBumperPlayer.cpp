@@ -77,11 +77,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 
-	if (CurrentVelocity.X > dragX && CurrentAcceleration.X == 0)
+	if (CurrentVelocity.X >= dragX && CurrentAcceleration.X == 0)
 	{
 		CurrentAcceleration.X -= dragX;
 	}
-	if (CurrentVelocity.X < -dragX && CurrentAcceleration.X == 0)
+	if (CurrentVelocity.X <= -dragX && CurrentAcceleration.X == 0)
 	{
 		CurrentAcceleration.X += dragX;
 	}
@@ -101,7 +101,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		maxVelocityY = 30;
 	}
 	if (!uHandbrake)
-		CurrentVelocity.X += CurrentAcceleration.X / 10;
+		CurrentVelocity.X += CurrentAcceleration.X;
 	else if (uHandbrake && CurrentVelocity.X > 0) {
 		if (CurrentVelocity.X < HandbrakeAccelaration) {
 			CurrentVelocity.X = 0;
@@ -158,6 +158,8 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
 		FVector NewLocation = GetActorLocation() + (GetActorForwardVector() * CurrentVelocity.X * DeltaTime);
+		if (uHandbrake)
+			NewLocation = NewLocation + (HandbrakeForward * FVector::DotProduct(GetActorForwardVector(), HandbrakeForward) * 100) * DeltaTime;
 		SetActorLocationAndRotation(NewLocation, NewRotation);
 	}
 }
@@ -182,20 +184,24 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 }
 
 void ABattleBumperPlayer::Handbrake() {
-	uHandbrake = true;
+	if (!uHandbrake) {
+		HandbrakeForward = GetActorForwardVector();
+		uHandbrake = true;
+	}
+
 	float direction = 1;
 	if (CurrentRotation.Yaw < 0)
 		direction *= -1;
-	if(CurrentAcceleration.X == 0)
+	if(CurrentAcceleration.X != 0)
 	CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 2;
 }
 
 void ABattleBumperPlayer::ReleaseHandbrake() {
 	uHandbrake = false;
-	if (CurrentRotation.Yaw < 0) {
+	if (CurrentRotation.Yaw < -maxVelocityY) {
 		CurrentRotation.Yaw = -maxVelocityY;
 	}
-	else
+	else if(CurrentRotation.Yaw > maxVelocityY)
 		CurrentRotation.Yaw = maxVelocityY;
 }
 
