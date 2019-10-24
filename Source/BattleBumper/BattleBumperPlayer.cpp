@@ -158,7 +158,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
 		FVector NewLocation = GetActorLocation() + (GetActorForwardVector() * CurrentVelocity.X * DeltaTime);
-		if (uHandbrake)
+		if (uHandbrake && !CurrentVelocity.IsZero())
 			NewLocation = NewLocation + (HandbrakeForward * FVector::DotProduct(GetActorForwardVector(), HandbrakeForward) * 100) * DeltaTime;
 		SetActorLocationAndRotation(NewLocation, NewRotation);
 	}
