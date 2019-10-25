@@ -71,13 +71,19 @@ public:
 	FVector CurrentAcceleration;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FRotator CurrentRotation;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector HandbrakeForward;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float HandbrakeNormal;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float HandbrakeAccelaration = -4;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float HandbrakeBoost;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	int PlayerID;
 	bool bGrowing;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
+	bool boosted;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool uHandbrake = false;
 	

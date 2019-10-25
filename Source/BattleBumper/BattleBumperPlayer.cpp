@@ -79,7 +79,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 
-	if (CurrentVelocity.X >= dragX && CurrentAcceleration.X == 0)
+	if (CurrentVelocity.X >= dragX && (CurrentAcceleration.X == 0 || boosted))
 	{
 		CurrentAcceleration.X -= dragX;
 	}
@@ -104,7 +104,8 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	}
 	if (!uHandbrake)
 		CurrentVelocity.X += CurrentAcceleration.X;
-	else if (uHandbrake && CurrentVelocity.X > 0) {
+	
+	if (uHandbrake && CurrentVelocity.X > 0) {
 		if (CurrentVelocity.X < HandbrakeAccelaration) {
 			CurrentVelocity.X = 0;
 		}
@@ -125,7 +126,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	else  
 	CurrentRotation.Add(0, CurrentAcceleration.Y / 10,0);
 
-	if (CurrentVelocity.X > maxVelocityX && CurrentAcceleration.X > 0) 
+	if (CurrentVelocity.X > maxVelocityX && CurrentAcceleration.X > 0 && !boosted) 
 	{
 		CurrentVelocity.X = maxVelocityX;
 	}
@@ -151,6 +152,10 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		CurrentRotation.Yaw = -maxVelocityY * 4;
 	}
 
+	if (boosted && CurrentVelocity.X < maxVelocityX) {
+		boosted = false;
+	}
+
 
 
 
@@ -160,8 +165,13 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
 		FVector NewLocation = GetActorLocation() + (GetActorForwardVector() * CurrentVelocity.X * DeltaTime);
-		if (uHandbrake && !CurrentVelocity.IsZero())
-			NewLocation = NewLocation + (HandbrakeForward * FVector::DotProduct(GetActorForwardVector(), HandbrakeForward) * 100) * DeltaTime;
+		if (uHandbrake && !CurrentVelocity.IsZero()) {
+			HandbrakeNormal = FVector::DotProduct(GetActorForwardVector(), HandbrakeForward);
+			if (HandbrakeNormal < 0.1) {
+				HandbrakeNormal = 0.3;
+			}
+			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 5)) / HandbrakeNormal * DeltaTime;
+		}
 		SetActorLocationAndRotation(NewLocation, NewRotation);
 	}
 }
@@ -205,6 +215,12 @@ void ABattleBumperPlayer::ReleaseHandbrake() {
 	}
 	else if(CurrentRotation.Yaw > maxVelocityY)
 		CurrentRotation.Yaw = maxVelocityY;
+
+	if (HandbrakeNormal < 0.3) {
+		CurrentVelocity.X += HandbrakeBoost;
+	}
+	if (CurrentVelocity.X > maxVelocityX)
+		boosted = true;
 }
 
 
