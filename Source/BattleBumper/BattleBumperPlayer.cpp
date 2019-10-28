@@ -22,11 +22,14 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	mesh->SetEnableGravity(true);
 	mesh->SetSimulatePhysics(true);
+	mesh->SetNotifyRigidBodyCollision(true);
+	mesh-> SetNotifyRigidBodyCollision(true);
+	mesh->OnComponentHit.AddDynamic(this, &ABattleBumperPlayer::OnCompHit);
 	RootComponent = mesh;
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
 	OurCollider->AttachTo(RootComponent);
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
-	OurVisibleComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OurVisibleComponent"));
+	
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
 	springArm->AttachTo(RootComponent);
 	springArm->TargetArmLength = 450.0f;
@@ -63,21 +66,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	newPitch.Pitch += mouseInput.Y;
 	springArm->SetWorldRotation(newPitch);
 
-
-	float CurrentScale = OurVisibleComponent->GetComponentScale().X;
-	if (bGrowing)
-	{
-		// Grow to double size over the course of one second
-		CurrentScale += DeltaTime;
-	}
-	else
-	{
-		// Shrink half as fast as we grow
-		CurrentScale -= (DeltaTime * 0.5f);
-	}
-	// Make sure we never drop below our starting size, or increase past double size.
-	CurrentScale = FMath::Clamp(CurrentScale, 1.0f, 2.0f);
-	OurVisibleComponent->SetWorldScale3D(FVector(CurrentScale));
 
 
 
@@ -268,4 +256,19 @@ void ABattleBumperPlayer::StartGrowing()
 void ABattleBumperPlayer::StopGrowing()
 {
 	bGrowing = false;
+}
+
+void ABattleBumperPlayer::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+
+	
+	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+	{
+		
+		if ( OtherActor->ActorHasTag(TEXT("Wall")) )
+		{ 
+			CurrentVelocity.X = 0;
+			CurrentAcceleration.X = 0;
+		}
+	}
 }
