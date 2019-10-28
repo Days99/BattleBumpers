@@ -20,9 +20,11 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
-
+	mesh->SetEnableGravity(true);
+	mesh->SetSimulatePhysics(true);
 	RootComponent = mesh;
-
+	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
+	OurCollider->AttachTo(RootComponent);
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
 	OurVisibleComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OurVisibleComponent"));
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
