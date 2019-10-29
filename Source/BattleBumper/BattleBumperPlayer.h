@@ -40,6 +40,7 @@ public:
 	void ReleaseHandbrake();
 	void StartGrowing();
 	void StopGrowing();
+	void UseBoost();
 
 	void mouseYawn(float axis);
 	void mousePitch(float axis);
@@ -72,6 +73,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float dragX = 2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float dragXBoost = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float dragZ = 2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentAcceleration;
@@ -88,8 +91,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	int PlayerID;
 	bool bGrowing;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool boosted;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
+	AActor * CollidedActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	int boost;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool uHandbrake = false;
 	

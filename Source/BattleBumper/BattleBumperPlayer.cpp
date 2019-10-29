@@ -73,9 +73,12 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 
-	if (CurrentVelocity.X >= dragX && (CurrentAcceleration.X == 0 || boosted))
+	if (CurrentVelocity.X >= dragX && CurrentAcceleration.X == 0)
 	{
 		CurrentAcceleration.X -= dragX;
+	}
+	if (CurrentVelocity.X >= dragXBoost && boosted) {
+		CurrentAcceleration.X -= dragXBoost;
 	}
 	if (CurrentVelocity.X <= -dragX && CurrentAcceleration.X == 0)
 	{
@@ -164,7 +167,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			if (HandbrakeNormal < 0.1) {
 				HandbrakeNormal = 0.3;
 			}
-			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 5)) / HandbrakeNormal * DeltaTime;
+			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 10)) / HandbrakeNormal * DeltaTime;
 		}
 		SetActorLocationAndRotation(NewLocation, NewRotation);
 	}
@@ -186,6 +189,7 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	InputComponent->BindAxis("MoveRight", this, &ABattleBumperPlayer::Move_YAxis);
 	InputComponent->BindAction("Handbrake", IE_Pressed,  this, &ABattleBumperPlayer::Handbrake);
 	InputComponent->BindAction("Handbrake", IE_Released, this, &ABattleBumperPlayer::ReleaseHandbrake);
+	InputComponent->BindAction("Boost", IE_Pressed, this, &ABattleBumperPlayer::UseBoost);
 
 }
 
@@ -200,6 +204,15 @@ void ABattleBumperPlayer::Handbrake() {
 		direction *= -1;
 	if(CurrentAcceleration.X != 0)
 	CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 2;
+}
+
+void ABattleBumperPlayer::UseBoost() {
+	if (boost > 0) {
+		CurrentVelocity.X += 500;
+		boost--;
+		if (CurrentVelocity.X > maxVelocityX)
+			boosted = true;
+	}
 }
 
 void ABattleBumperPlayer::ReleaseHandbrake() {
@@ -221,6 +234,7 @@ void ABattleBumperPlayer::ReleaseHandbrake() {
 void ABattleBumperPlayer::Move_XAxis(float AxisValue)
 {
 	// Move at 100 units per second forward or backward
+	if(!boosted)
 	CurrentAcceleration.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxAccelaration;
 	if (CurrentAcceleration.X > maxAccelaration) {
 		CurrentAcceleration.X = maxAccelaration;
@@ -268,11 +282,17 @@ void ABattleBumperPlayer::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherA
 	
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
-		
-		if ( OtherActor->ActorHasTag(TEXT("Wall")) )
-		{ 
-			CurrentVelocity.X = 0;
-			CurrentAcceleration.X = 0;
-		}
+		CollidedActor = OtherActor;
+		//if (CollidedActor->Tags.Num() > 0) {
+			if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
+				boost++;
+				OtherActor->Destroy();
+			}
+
+			if (CollidedActor->GetName() == "Wall") {
+				CurrentVelocity.X = 0;
+				CurrentAcceleration.X = 0;
+			}
+		//}
 	}
 }
