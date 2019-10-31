@@ -51,21 +51,56 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	
 	
 	// declare trigger capsule
+<<<<<<< HEAD
 	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
 	TriggerCapsule->InitCapsuleSize(30.0f, 70.0f);;
 	TriggerCapsule->SetWorldLocation(FVector(140.f, 0, -10.f));
 	TriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
 	TriggerCapsule->SetupAttachment(RootComponent);
 	
+=======
+	FrontTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
+	FrontTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	FrontTriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
+	FrontTriggerCapsule->SetupAttachment(RootComponent);
+>>>>>>> d1c58839f0dc07ef303c7e45bcf1c97d44e2c4e5
 	
+	// declare trigger capsule
+	BackTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 2"));
+	BackTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	BackTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 2"));
+	BackTriggerCapsule->SetupAttachment(RootComponent);
+
+	// declare trigger capsule
+	LeftTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 3"));
+	LeftTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	LeftTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 3"));
+	LeftTriggerCapsule->SetupAttachment(RootComponent);
+
+	// declare trigger capsule
+	RightTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 4"));
+	RightTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	RightTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 4"));
+	RightTriggerCapsule->SetupAttachment(RootComponent);
+
 }
 
 // Called when the game starts or when spawned
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	TriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
-	TriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd);
+	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
+	FrontTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd);
+
+
+	BackTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin2);
+	BackTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd2);
+
+	LeftTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin3);
+	LeftTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd3);
+
+	RightTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin4);
+	RightTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd4);
 }
 
 // Called every frame
@@ -90,6 +125,31 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentVelocity.X = 0;
 		CurrentAcceleration.X = 0;
+
+	}
+
+	if (collisionright == true)
+	{
+		CurrentVelocity.X = 0;
+		CurrentAcceleration.X = 0;
+		if (CurrentAcceleration.Y >= 0)
+		{
+			CurrentAcceleration.Y = 0;
+
+		}
+	}
+
+	if (collisionleft == true)
+	{
+		CurrentVelocity.X = 0;
+		CurrentAcceleration.X = 0;
+		if (CurrentAcceleration.Y <= 0)
+		{
+			CurrentAcceleration.Y = 0;
+
+		}
+	
+		
 	}
 
 	if (CurrentVelocity.X >= dragX && CurrentAcceleration.X == 0)
@@ -317,6 +377,8 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 	}
 }
 
+
+
 void ABattleBumperPlayer::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	
@@ -325,6 +387,99 @@ void ABattleBumperPlayer::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp
 		CollidedActor2 = OtherActor;
 		if (CollidedActor2->GetName() == "Wall") {
 			collision = false;
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//collision = true;
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		CollidedActor = OtherActor;
+		//if (CollidedActor->Tags.Num() > 0) {
+		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
+			boost++;
+			OtherActor->Destroy();
+		}
+
+		if (CollidedActor->GetName() == "Wall") {
+			collision = true;
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapEnd2(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		CollidedActor2 = OtherActor;
+	
+		if (CollidedActor2->GetName() == "Wall") {
+			collision = true;
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//collision = true;
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		CollidedActor = OtherActor;
+		//if (CollidedActor->Tags.Num() > 0) {
+		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
+			boost++;
+			OtherActor->Destroy();
+		}
+
+		if (CollidedActor->GetName() == "Wall") {
+			collisionleft = true;
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapEnd3(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		CollidedActor2 = OtherActor;
+
+		if (CollidedActor2->GetName() == "Wall") {
+			collisionleft = false;
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//collision = true;
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		CollidedActor = OtherActor;
+		//if (CollidedActor->Tags.Num() > 0) {
+		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
+			boost++;
+			OtherActor->Destroy();
+		}
+
+		if (CollidedActor->GetName() == "Wall") {
+			collisionright = true;
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		CollidedActor2 = OtherActor;
+
+		if (CollidedActor2->GetName() == "Wall") {
+			collisionright = false;
 		}
 	}
 }
