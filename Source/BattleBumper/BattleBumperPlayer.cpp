@@ -2,6 +2,7 @@
 
 
 #include "BattleBumperPlayer.h"
+#include "Components/PrimitiveComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
@@ -24,15 +25,17 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	UStaticMesh * Asset = MeshAsset.Object;
     mesh->SetStaticMesh(Asset);
 	
-	RootComponent = mesh;
+	
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
-	OurCollider->AttachTo(RootComponent);
+	
 	//OurCollider->SetSimulatePhysics(true);
 	//OurCollider->SetEnableGravity(true);
 
 	OurCollider->SetNotifyRigidBodyCollision(true);
-	OurCollider->SetNotifyRigidBodyCollision(true);
+
 	OurCollider->OnComponentHit.AddDynamic(this, &ABattleBumperPlayer::OnCompHit);
+	RootComponent = OurCollider;
+	mesh->AttachTo(RootComponent);
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
 	
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
@@ -44,6 +47,12 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
 	
 	
+	// declare trigger capsule
+	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
+	TriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	TriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
+	TriggerCapsule->SetupAttachment(RootComponent);
+	
 	
 }
 
@@ -51,7 +60,8 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	TriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
+	TriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd);
 }
 
 // Called every frame
@@ -72,7 +82,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	springArm->SetWorldRotation(newPitch);
 
 
-
+	if (collision == true)
+	{
+		CurrentVelocity.X = 0;
+		CurrentAcceleration.X = 0;
+	}
 
 	if (CurrentVelocity.X >= dragX && CurrentAcceleration.X == 0)
 	{
@@ -297,3 +311,39 @@ void ABattleBumperPlayer::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherA
 		//}
 	}
 }
+
+void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+
+	CurrentVelocity.X = 0;
+	CurrentAcceleration.X = 0;
+	//collision = true;
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		CollidedActor = OtherActor;
+		//if (CollidedActor->Tags.Num() > 0) {
+		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
+			boost++;
+			OtherActor->Destroy();
+		}
+
+		if (CollidedActor->GetName() == "Wall") {
+			collision = true;
+		}
+	
+		//}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		CollidedActor2 = OtherActor;
+		if (CollidedActor2->GetName() == "Wall") {
+			collision = false;
+		}
+	}
+}
+
