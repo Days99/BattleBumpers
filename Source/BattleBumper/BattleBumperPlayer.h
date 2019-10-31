@@ -48,9 +48,6 @@ public:
 	void mouseYawn(float axis);
 	void mousePitch(float axis);
 
-	UFUNCTION()
-	void OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
 	//Vector
 	FVector2D mouseInput;
 

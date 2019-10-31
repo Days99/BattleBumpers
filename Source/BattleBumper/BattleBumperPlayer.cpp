@@ -22,8 +22,8 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
-	UStaticMesh * Asset = MeshAsset.Object;
-    mesh->SetStaticMesh(Asset);
+	//UStaticMesh * Asset = MeshAsset.Object;
+    //mesh->SetStaticMesh(Asset);
 	
 	
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
@@ -33,7 +33,6 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 	OurCollider->SetNotifyRigidBodyCollision(true);
 
-	OurCollider->OnComponentHit.AddDynamic(this, &ABattleBumperPlayer::OnCompHit);
 	RootComponent = OurCollider;
 	mesh->AttachTo(RootComponent);
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
@@ -291,32 +290,9 @@ void ABattleBumperPlayer::StopGrowing()
 	bGrowing = false;
 }
 
-void ABattleBumperPlayer::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-
-	
-	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
-	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-			if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-				boost++;
-				OtherActor->Destroy();
-			}
-
-			if (CollidedActor->GetName() == "Wall") {
-				CurrentVelocity.X = 0;
-				CurrentAcceleration.X = 0;
-			}
-		//}
-	}
-}
-
 void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
-	CurrentVelocity.X = 0;
-	CurrentAcceleration.X = 0;
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
