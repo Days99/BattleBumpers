@@ -18,15 +18,18 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// Create a dummy root component we can attach things to.
 	
 	// Create a camera and a visible object
-
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
-	//UStaticMesh * Asset = MeshAsset.Object;
-    //mesh->SetStaticMesh(Asset);
-	
+	UStaticMesh * Asset = MeshAsset.Object;
+    mesh->SetStaticMesh(Asset);
 	
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
+	
+	if (ROLE_Authority) {
+		SetReplicates(true);
+		SetReplicateMovement(true);
+	}
 	
 	//OurCollider->SetSimulatePhysics(true);
 	//OurCollider->SetEnableGravity(true);
@@ -44,11 +47,13 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	springArm->SetWorldRotation(FRotator(-60.f,0.0f,0.0f));
 
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
+
 	
 	
 	// declare trigger capsule
 	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
-	TriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	TriggerCapsule->InitCapsuleSize(30.0f, 70.0f);;
+	TriggerCapsule->SetWorldLocation(FVector(140.f, 0, -10.f));
 	TriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
 	TriggerCapsule->SetupAttachment(RootComponent);
 	
@@ -184,6 +189,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 20)) / HandbrakeNormal * DeltaTime;
 		}
 		SetActorLocationAndRotation(NewLocation, NewRotation);
+		
 	}
 }
 

@@ -56,6 +56,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	UCameraComponent* camera;
+	
+	
 
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* mesh;
@@ -90,6 +92,7 @@ public:
 	float HandbrakeBoost;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	int PlayerID;
+	
 
 	bool bGrowing;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
