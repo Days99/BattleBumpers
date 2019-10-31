@@ -20,8 +20,9 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
-	
-	//mesh->SetEnableGravity(true);
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
+	UStaticMesh * Asset = MeshAsset.Object;
+    mesh->SetStaticMesh(Asset);
 	
 	RootComponent = mesh;
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
@@ -167,7 +168,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			if (HandbrakeNormal < 0.1) {
 				HandbrakeNormal = 0.3;
 			}
-			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 10)) / HandbrakeNormal * DeltaTime;
+			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 20)) / HandbrakeNormal * DeltaTime;
 		}
 		SetActorLocationAndRotation(NewLocation, NewRotation);
 	}

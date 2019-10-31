@@ -63,19 +63,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float maxVelocityX = 200;
+	float maxVelocityX = 1200;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxVelocityRX = -250;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float maxAccelaration = 10;
+	float maxAccelaration = 5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxVelocityY = 30;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float dragX = 2;
+	float dragX = 5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float dragXBoost = 2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float dragZ = 2;
+	float dragZ = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentAcceleration;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -85,7 +85,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float HandbrakeNormal;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float HandbrakeAccelaration = -4;
+	float HandbrakeAccelaration = -3.5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float HandbrakeBoost;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
