@@ -2,6 +2,7 @@
 
 #pragma once
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "CoreMinimal.h"
@@ -17,6 +18,8 @@ class BATTLEBUMPER_API ABattleBumperPlayer : public APawn
 public:
 	// Sets default values for this pawn's properties
 	ABattleBumperPlayer();
+	UPROPERTY(EditAnywhere)
+		bool collision = false;
 
 protected:
 	// Called when the game starts or when spawned
@@ -90,15 +93,23 @@ public:
 	float HandbrakeBoost;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	int PlayerID;
+
 	bool bGrowing;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool boosted;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
 	AActor * CollidedActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
+		AActor* CollidedActor2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	int boost;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool uHandbrake = false;
-	
-
+	UFUNCTION()
+	void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	// declare overlap end function
+	UFUNCTION()
+	void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+		class UCapsuleComponent* TriggerCapsule;
 };
