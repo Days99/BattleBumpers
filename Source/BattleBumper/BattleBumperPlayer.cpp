@@ -51,19 +51,11 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	
 	
 	// declare trigger capsule
-<<<<<<< HEAD
-	TriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
-	TriggerCapsule->InitCapsuleSize(30.0f, 70.0f);;
-	TriggerCapsule->SetWorldLocation(FVector(140.f, 0, -10.f));
-	TriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
-	TriggerCapsule->SetupAttachment(RootComponent);
-	
-=======
 	FrontTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
-	FrontTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	FrontTriggerCapsule->InitCapsuleSize(30.0f, 70.0f);
+	FrontTriggerCapsule->SetWorldLocation(FVector(140.f, 0, -10.f));
 	FrontTriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
 	FrontTriggerCapsule->SetupAttachment(RootComponent);
->>>>>>> d1c58839f0dc07ef303c7e45bcf1c97d44e2c4e5
 	
 	// declare trigger capsule
 	BackTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 2"));
