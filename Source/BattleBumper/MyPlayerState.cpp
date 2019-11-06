@@ -7,7 +7,6 @@
 #include "GameFramework/Pawn.h"
 
 
-float AMyPlayerState::ReturnPlayerVelocity() {
-	ABattleBumperPlayer *  p = Cast<ABattleBumperPlayer>(GetOwner());
-	return p->CurrentVelocity.X;
+float AMyPlayerState::ReturnPlayerVelocity(ABattleBumperPlayer * pawn) {
+	return pawn->CurrentVelocity.X;
 }

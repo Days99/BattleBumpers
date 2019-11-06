@@ -35,7 +35,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
 	
-	ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
+	//ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
 
 	
 	//OurCollider->SetSimulatePhysics(true);

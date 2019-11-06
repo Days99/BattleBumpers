@@ -41,11 +41,6 @@ public:
 	UPROPERTY(replicated)
 	AActor* MyOwner;
 
-
-	
-	UPROPERTY(EditAnywhere)
-	UCharacterMovementComponent* ServerMovement;
-
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	UPROPERTY(EditAnywhere)
