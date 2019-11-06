@@ -3,6 +3,7 @@
 #pragma once
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h" 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "CoreMinimal.h"
@@ -34,8 +35,16 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, replicated)
 	UBoxComponent* OurCollider;
+
+	UPROPERTY(replicated)
+	AActor* MyOwner;
+
+
+	
+	UPROPERTY(EditAnywhere)
+	UCharacterMovementComponent* ServerMovement;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -46,6 +55,7 @@ public:
 	void Move_YAxis(float AxisValue);
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	void Handbrake();
+
 	void ReleaseHandbrake();
 	void StartGrowing();
 	void StopGrowing();
@@ -66,7 +76,7 @@ public:
 	
 
 	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent* mesh;
+	UStaticMeshComponent* myMesh;
 	//Input variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;
@@ -136,6 +146,10 @@ public:
 
 	UFUNCTION()
 		void OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
+	UFUNCTION(BlueprintCallable)
+		float ReturnVelocity();
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
 	class UCapsuleComponent* FrontTriggerCapsule;

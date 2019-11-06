@@ -8,28 +8,35 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/InputComponent.h"
 #include "Particles/ParticleSystem.h"
+#include "Net/UnrealNetwork.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/Actor.h"
+
 
 // Sets default values
 ABattleBumperPlayer::ABattleBumperPlayer()
 {
-	AutoPossessPlayer = EAutoReceiveInput::Player0;
+	AutoPossessPlayer = EAutoReceiveInput::Disabled;
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	MyOwner = GetOwner();
+
 	// Create a dummy root component we can attach things to.
 	
 	// Create a camera and a visible object
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
+	myMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
 	UStaticMesh * Asset = MeshAsset.Object;
-    mesh->SetStaticMesh(Asset);
+	myMesh->SetStaticMesh(Asset);
+
+	bReplicates = true;
 	
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
 	
-	if (ROLE_Authority) {
-		SetReplicates(true);
-		SetReplicateMovement(true);
-	}
+	ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
+
 	
 	//OurCollider->SetSimulatePhysics(true);
 	//OurCollider->SetEnableGravity(true);
@@ -37,7 +44,9 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	OurCollider->SetNotifyRigidBodyCollision(true);
 
 	RootComponent = OurCollider;
-	mesh->AttachTo(RootComponent);
+	myMesh->AttachTo(RootComponent);
+
+	//ServerMovement->AddToRoot();
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
 	
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
@@ -77,10 +86,17 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 }
 
+void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
+}
+
 // Called when the game starts or when spawned
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
 	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
 	FrontTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd);
 
@@ -231,6 +247,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 	if (!CurrentVelocity.IsZero() || !CurrentRotation.IsZero())
 	{
+
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
 		FVector NewLocation = GetActorLocation() + (GetActorForwardVector() * CurrentVelocity.X * DeltaTime);
 		if (uHandbrake && !CurrentVelocity.IsZero()) {
@@ -241,7 +258,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 20)) / HandbrakeNormal * DeltaTime;
 		}
 		SetActorLocationAndRotation(NewLocation, NewRotation);
-		
+
 	}
 }
 
@@ -461,6 +478,10 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 			collisionright = true;
 		}
 	}
+}
+
+float ABattleBumperPlayer::ReturnVelocity() {
+	return CurrentVelocity.X;
 }
 
 void ABattleBumperPlayer::OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
