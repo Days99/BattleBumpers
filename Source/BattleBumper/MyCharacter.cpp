@@ -250,6 +250,7 @@ void AMyCharacter::Tick(float DeltaTime)
 			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 20)) / HandbrakeNormal * DeltaTime;
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
+		//GetVelocity().Set(Cu)
 		AddMovementInput(GetActorForwardVector(),CurrentVelocity.X / 1000);
 		//if(NewRotation != GetActorRotation())
 		//SetActorRotation(NewRotation);
@@ -306,7 +307,7 @@ void AMyCharacter::Handbrake() {
 	if (!uHandbrake) {
 		HandbrakeForward = GetActorForwardVector();
 		uHandbrake = true;
-		RotationBase = 0.25f;
+		RotationBase *= 2;
 	}
 
 	float direction = 1;
@@ -318,7 +319,8 @@ void AMyCharacter::Handbrake() {
 
 void AMyCharacter::UseBoost() {
 	if (boost > 0) {
-		CurrentVelocity.X += 500;
+		//CurrentVelocity.X += 500;
+		//GetVelocity().SetComponentForAxis(EAxis::X, 1.5);
 		boost--;
 		if (CurrentVelocity.X > maxVelocityX)
 			boosted = true;
