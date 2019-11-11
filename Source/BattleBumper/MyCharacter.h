@@ -98,6 +98,8 @@ public:
 		float HandbrakeAccelaration = -3.5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		float HandbrakeBoost;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		float RotationBase;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 		int PlayerID;
 

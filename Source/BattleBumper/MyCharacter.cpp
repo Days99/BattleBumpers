@@ -200,7 +200,7 @@ void AMyCharacter::Tick(float DeltaTime)
 		CurrentRotation.Add(0, -CurrentRotation.Yaw, 0);
 	}
 	else
-		CurrentRotation.Add(0, CurrentAcceleration.Y / 10, 0);
+		CurrentRotation.Add(0, CurrentAcceleration.Y / 1000, 0);
 
 	if (CurrentVelocity.X > maxVelocityX && CurrentAcceleration.X > 0 && !boosted)
 	{
@@ -250,13 +250,14 @@ void AMyCharacter::Tick(float DeltaTime)
 			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 20)) / HandbrakeNormal * DeltaTime;
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
-
+		AddMovementInput(GetActorForwardVector(),CurrentVelocity.X / 1000);
+		//if(NewRotation != GetActorRotation())
+		//SetActorRotation(NewRotation);
 	}
 }
 
 void AMyCharacter::MoveForward(float value)
 {
-	AddMovementInput(GetActorForwardVector(), value*CurrentVelocity.X);
 	// Move at 100 units per second forward or backward
 	if (!boosted)
 		CurrentAcceleration.X = FMath::Clamp(value, -1.0f, 1.0f) * maxAccelaration;
@@ -270,7 +271,7 @@ void AMyCharacter::MoveForward(float value)
 
 void AMyCharacter::MoveRight(float value)
 {
-	AddMovementInput(GetActorRightVector(), value);
+	AddControllerYawInput(value * RotationBase);
 	// Move at 100 units per second right or left
 	CurrentAcceleration.Y = FMath::Clamp(value, -1.0f, 1.0f) * maxVelocityY;
 	if (CurrentAcceleration.Y > maxVelocityY) {
@@ -305,6 +306,7 @@ void AMyCharacter::Handbrake() {
 	if (!uHandbrake) {
 		HandbrakeForward = GetActorForwardVector();
 		uHandbrake = true;
+		RotationBase = 0.25f;
 	}
 
 	float direction = 1;
@@ -324,6 +326,7 @@ void AMyCharacter::UseBoost() {
 }
 
 void AMyCharacter::ReleaseHandbrake() {
+	RotationBase = 0.1f;
 	uHandbrake = false;
 	if (CurrentRotation.Yaw < -maxVelocityY) {
 		CurrentRotation.Yaw = -maxVelocityY;
