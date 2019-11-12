@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/CharacterMovementComponent.h" 
 #include "BattleBumperPlayer.generated.h"
 
 
@@ -37,6 +38,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	UPROPERTY(EditAnywhere, replicated)
 	UBoxComponent* OurCollider;
+
+	UPROPERTY(EditAnywhere, replicated)
+	UCharacterMovementComponent* MovementCharacter;
 
 	UPROPERTY(replicated)
 	AActor* MyOwner;
