@@ -34,9 +34,7 @@ AMyCharacter::AMyCharacter()
 	//ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
 
 
-
-
-
+	//Collider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollier"));
 
 	//ServerMovement->AddToRoot();
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
@@ -52,29 +50,29 @@ AMyCharacter::AMyCharacter()
 
 
 	// declare trigger capsule
-	FrontTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
-	FrontTriggerCapsule->InitCapsuleSize(30.0f, 70.0f);
-	FrontTriggerCapsule->SetWorldLocation(FVector(140.f, 0, -10.f));
-	FrontTriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
-	FrontTriggerCapsule->SetupAttachment(RootComponent);
+	//FrontTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
+	//FrontTriggerCapsule->InitCapsuleSize(30.0f, 70.0f);
+	//FrontTriggerCapsule->SetWorldLocation(FVector(140.f, 0, -10.f));
+	//FrontTriggerCapsule->SetCollisionProfileName(TEXT("Trigger"));
+	//FrontTriggerCapsule->SetupAttachment(RootComponent);
 
-	// declare trigger capsule
-	BackTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 2"));
-	BackTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
-	BackTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 2"));
-	BackTriggerCapsule->SetupAttachment(RootComponent);
+	//// declare trigger capsule
+	//BackTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 2"));
+	//BackTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	//BackTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 2"));
+	//BackTriggerCapsule->SetupAttachment(RootComponent);
 
-	// declare trigger capsule
-	LeftTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 3"));
-	LeftTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
-	LeftTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 3"));
-	LeftTriggerCapsule->SetupAttachment(RootComponent);
+	//// declare trigger capsule
+	//LeftTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 3"));
+	//LeftTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	//LeftTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 3"));
+	//LeftTriggerCapsule->SetupAttachment(RootComponent);
 
-	// declare trigger capsule
-	RightTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 4"));
-	RightTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
-	RightTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 4"));
-	RightTriggerCapsule->SetupAttachment(RootComponent);
+	//// declare trigger capsule
+	//RightTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 4"));
+	//RightTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	//RightTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 4"));
+	//RightTriggerCapsule->SetupAttachment(RootComponent);
 
 }
 
@@ -89,18 +87,18 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMyCharacter::OnOverlapBegin);
-	FrontTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AMyCharacter::OnOverlapEnd);
+	//FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMyCharacter::OnOverlapBegin);
+	//FrontTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AMyCharacter::OnOverlapEnd);
 
 
-	BackTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMyCharacter::OnOverlapBegin2);
-	BackTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AMyCharacter::OnOverlapEnd2);
+	//BackTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMyCharacter::OnOverlapBegin2);
+	//BackTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AMyCharacter::OnOverlapEnd2);
 
-	LeftTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMyCharacter::OnOverlapBegin3);
-	LeftTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AMyCharacter::OnOverlapEnd3);
+	//LeftTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMyCharacter::OnOverlapBegin3);
+	//LeftTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AMyCharacter::OnOverlapEnd3);
 
-	RightTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMyCharacter::OnOverlapBegin4);
-	RightTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AMyCharacter::OnOverlapEnd4);
+	//RightTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMyCharacter::OnOverlapBegin4);
+	//RightTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &AMyCharacter::OnOverlapEnd4);
 }
 
 // Called every frame
@@ -307,7 +305,7 @@ void AMyCharacter::Handbrake() {
 	if (!uHandbrake) {
 		HandbrakeForward = GetActorForwardVector();
 		uHandbrake = true;
-		RotationBase *= 2;
+		RotationBase *= 5;
 	}
 
 	float direction = 1;
@@ -320,7 +318,7 @@ void AMyCharacter::Handbrake() {
 void AMyCharacter::UseBoost() {
 	if (boost > 0) {
 		//CurrentVelocity.X += 500;
-		//GetVelocity().SetComponentForAxis(EAxis::X, 1.5);
+		//GetVelocity(). = GetVelocity().Size() * 1.5;
 		boost--;
 		if (CurrentVelocity.X > maxVelocityX)
 			boosted = true;
@@ -328,7 +326,7 @@ void AMyCharacter::UseBoost() {
 }
 
 void AMyCharacter::ReleaseHandbrake() {
-	RotationBase = 0.1f;
+	RotationBase /= 5;
 	uHandbrake = false;
 	if (CurrentRotation.Yaw < -maxVelocityY) {
 		CurrentRotation.Yaw = -maxVelocityY;

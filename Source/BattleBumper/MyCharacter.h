@@ -145,16 +145,19 @@ public:
 	UFUNCTION(BlueprintCallable)
 		float ReturnVelocity();
 
-	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
-		class UCapsuleComponent* FrontTriggerCapsule;
+	//UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+	//	class UCapsuleComponent* FrontTriggerCapsule;
 
-	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
-		class UCapsuleComponent* BackTriggerCapsule;
+	//UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+	//	class UCapsuleComponent* BackTriggerCapsule;
 
-	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
-		class UCapsuleComponent* LeftTriggerCapsule;
+	//UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+	//	class UCapsuleComponent* LeftTriggerCapsule;
 
-	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
-		class UCapsuleComponent* RightTriggerCapsule;
+	//UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+	//	class UCapsuleComponent* RightTriggerCapsule;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character")
+		class UBoxComponent* Collider;
 
 };
