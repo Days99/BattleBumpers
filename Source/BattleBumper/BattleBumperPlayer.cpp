@@ -27,6 +27,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// Create a camera and a visible object
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	myMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
+	MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
 	UStaticMesh * Asset = MeshAsset.Object;
 	myMesh->SetStaticMesh(Asset);
@@ -256,6 +257,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 20)) / HandbrakeNormal * DeltaTime;
 		}
+		SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(NewLocation, NewRotation);
 
 	}
@@ -350,6 +352,7 @@ void ABattleBumperPlayer::Move_XAxis(float AxisValue)
 
 void ABattleBumperPlayer::Move_YAxis(float AxisValue)
 {
+	//AddControllerYawInput(value * RotationBase);
 	// Move at 100 units per second right or left
 	CurrentAcceleration.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxVelocityY;
 	if (CurrentAcceleration.Y > maxVelocityY) {
