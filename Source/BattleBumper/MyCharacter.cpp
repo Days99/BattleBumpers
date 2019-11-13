@@ -18,7 +18,7 @@ AMyCharacter::AMyCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	MyOwner = GetOwner();
-
+	
 	// Create a dummy root component we can attach things to.
 
 	// Create a camera and a visible object

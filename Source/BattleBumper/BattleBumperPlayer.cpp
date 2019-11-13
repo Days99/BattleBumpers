@@ -32,7 +32,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	myMesh->SetStaticMesh(Asset);
 
 	bReplicates = true;
-	
+	SetReplicateMovement(true);
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
 	
 	//ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
@@ -133,7 +133,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentVelocity.X = 0;
 		CurrentAcceleration.X = 0;
-
 	}
 
 	if (collisionright == true)
@@ -257,9 +256,25 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 20)) / HandbrakeNormal * DeltaTime;
 		}
-		SetActorLocationAndRotation(NewLocation, NewRotation);
+		Server_ReliableFunctionCallThatRunsOnServer(NewLocation, NewRotation);
 
 	}
+}
+void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(FVector NewLocation, FRotator NewRotation)
+{
+	if(Role == ROLE_Authority)
+	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(NewLocation, NewRotation);
+}
+
+bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(FVector NewLocation, FRotator NewRotation)
+{
+	return true;
+}
+
+
+void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(FVector NewLocation,	FRotator NewRotation)
+{
+	SetActorLocationAndRotation(NewLocation, NewRotation);
 }
 
 // Called to bind functionality to input

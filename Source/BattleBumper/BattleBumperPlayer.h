@@ -41,6 +41,13 @@ public:
 	UPROPERTY(replicated)
 	AActor* MyOwner;
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void Server_ReliableFunctionCallThatRunsOnServer(FVector NewLocation, FRotator NewRotation);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(FVector NewLocation, FRotator NewRotation);
+
+	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	UPROPERTY(EditAnywhere)
