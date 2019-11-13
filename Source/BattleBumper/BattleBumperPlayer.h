@@ -114,7 +114,11 @@ public:
 	float HandbrakeBoost;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	int PlayerID;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	int Grounded;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	FRotator GroundRotation;
 
 	bool bGrowing;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -154,6 +158,13 @@ public:
 		void OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 
+	UFUNCTION()
+		void OnOverlapBeginGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+		void OnOverlapEndGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
 	UFUNCTION(BlueprintCallable)
 		float ReturnVelocity();
 
@@ -168,5 +179,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
 	class UCapsuleComponent* RightTriggerCapsule;
+
+	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+		class UCapsuleComponent* GroundedCapsule;
 
 };

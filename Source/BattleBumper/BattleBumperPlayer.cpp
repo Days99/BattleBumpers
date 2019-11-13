@@ -11,6 +11,8 @@
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Actor.h"
+#include "math.h"
+#include "GroundActor.h"
 
 
 // Sets default values
@@ -58,7 +60,9 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
 
-	
+	GroundedCapsule = CreateDefaultSubobject< UCapsuleComponent>(TEXT("Grounded Capsule"));
+	GroundedCapsule->SetupAttachment(RootComponent);
+
 	
 	// declare trigger capsule
 	FrontTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule"));
@@ -110,6 +114,10 @@ void ABattleBumperPlayer::BeginPlay()
 
 	RightTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin4);
 	RightTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd4);
+
+	GroundedCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBeginGround);
+	GroundedCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEndGround);
+
 }
 
 // Called every frame
@@ -243,12 +251,23 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 
+
 	// Handle movement based on our "MoveX" and "MoveY" axes
 
-	if (!CurrentVelocity.IsZero() || !CurrentRotation.IsZero())
+	if (!CurrentVelocity.IsZero() || !CurrentRotation.IsZero() || Grounded >= 0)
 	{
 
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
+		if (NewRotation.Pitch <= GroundRotation.Pitch && GroundRotation.Pitch > 0) {
+			NewRotation.Pitch += 1;
+		}
+		else if (NewRotation.Pitch > GroundRotation.Pitch && NewRotation.Pitch >= 1) {
+			NewRotation.Pitch -= 1;
+		}
+		else 
+			NewRotation.Pitch = 0;
+		
+
 		FVector NewLocation = GetActorLocation() + (GetActorForwardVector() * CurrentVelocity.X * DeltaTime);
 		if (uHandbrake && !CurrentVelocity.IsZero()) {
 			HandbrakeNormal = FVector::DotProduct(GetActorForwardVector(), HandbrakeForward);
@@ -256,6 +275,9 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				HandbrakeNormal = 0.3;
 			}
 			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 20)) / HandbrakeNormal * DeltaTime;
+		}
+		if (Grounded <= 0) {
+			NewLocation = NewLocation + (GetActorUpVector() * -5);
 		}
 		SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(NewLocation, NewRotation);
@@ -511,6 +533,50 @@ void ABattleBumperPlayer::OnOverlapEnd4(class UPrimitiveComponent* OverlappedCom
 
 		if (CollidedActor2->GetName() == "Wall") {
 			collisionright = false;
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//collision = true;
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		AGroundActor * actor = Cast<AGroundActor>(OtherActor);
+		if (actor) {
+			Grounded++;
+				//CurrentRotation.Roll = actor->GetActorRotation().Roll;
+				FVector Rotation = FVector(actor->GetActorRotation().Roll , 0, actor->GetActorRotation().Pitch);
+				if (Rotation.X < 0)
+					Rotation.X *= -1;
+				if (Rotation.Z < 0)
+					Rotation.Z *= -1;
+
+				if (Rotation.X > 0.0f)
+					GroundRotation.Pitch = Rotation.X - 0.001;
+
+				if (Rotation.Z > 0.0f)
+					GroundRotation.Pitch = Rotation.Z - 0.001;
+
+				if (Rotation.Z == 0 && Rotation.X == 0 && Grounded == 1) {
+					GroundRotation.Pitch = 0;
+				}
+
+
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		AGroundActor* actor = Cast<AGroundActor>(OtherActor);
+
+		if (actor) {
+			//GroundRotation = nullptr;
+			Grounded--;
 		}
 	}
 }
