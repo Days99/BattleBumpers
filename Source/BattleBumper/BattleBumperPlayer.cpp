@@ -445,6 +445,10 @@ void ABattleBumperPlayer::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp
 		if (CollidedActor2->GetName() == "Wall") {
 			collision = false;
 		}
+		AGroundActor* ground = Cast<AGroundActor>(OtherActor);
+		if (ground) {
+			collision = false;
+		}
 	}
 }
 
@@ -454,11 +458,18 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
 		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
+
+		AGroundActor* ground = Cast<AGroundActor>(OtherActor);
+		if (ground) {
+			collision = true;
+		}
+
 		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
 			boost++;
 			OtherActor->Destroy();
 		}
+
+
 
 		if (CollidedActor->GetName() == "Wall") {
 			collision = true;
@@ -474,7 +485,11 @@ void ABattleBumperPlayer::OnOverlapEnd2(class UPrimitiveComponent* OverlappedCom
 		CollidedActor2 = OtherActor;
 	
 		if (CollidedActor2->GetName() == "Wall") {
-			collision = true;
+			collision = false;
+		}
+		AGroundActor* ground = Cast<AGroundActor>(OtherActor);
+		if (ground) {
+			collision = false;
 		}
 	}
 }
@@ -489,6 +504,10 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
 			boost++;
 			OtherActor->Destroy();
+		}
+		AGroundActor* ground = Cast<AGroundActor>(OtherActor);
+		if (ground) {
+			collisionleft = true;
 		}
 
 		if (CollidedActor->GetName() == "Wall") {
@@ -505,6 +524,10 @@ void ABattleBumperPlayer::OnOverlapEnd3(class UPrimitiveComponent* OverlappedCom
 		CollidedActor2 = OtherActor;
 
 		if (CollidedActor2->GetName() == "Wall") {
+			collisionleft = false;
+		}
+		AGroundActor* ground = Cast<AGroundActor>(OtherActor);
+		if (ground) {
 			collisionleft = false;
 		}
 	}
@@ -525,6 +548,10 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		if (CollidedActor->GetName() == "Wall") {
 			collisionright = true;
 		}
+		AGroundActor* ground = Cast<AGroundActor>(OtherActor);
+		if (ground) {
+			collisionright = true;
+		}
 	}
 }
 
@@ -542,6 +569,11 @@ void ABattleBumperPlayer::OnOverlapEnd4(class UPrimitiveComponent* OverlappedCom
 		if (CollidedActor2->GetName() == "Wall") {
 			collisionright = false;
 		}
+		AGroundActor* ground = Cast<AGroundActor>(OtherActor);
+		if (ground) {
+			collisionright = false;
+		}
+
 	}
 }
 
