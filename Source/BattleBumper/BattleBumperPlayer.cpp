@@ -285,7 +285,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			NewLocation = NewLocation + (HandbrakeForward * (CurrentVelocity.X / 40)) / HandbrakeNormal * DeltaTime;
 		}
 		if (Grounded <= 0) {
-			NewLocation = NewLocation + (GetActorUpVector() * (-50 * DeltaTime));
+			NewLocation = NewLocation + (GetActorUpVector() * (-100 * DeltaTime));
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(NewLocation, NewRotation);
