@@ -70,6 +70,8 @@ public:
 	void mouseYawn(float axis);
 	void mousePitch(float axis);
 
+	UFUNCTION(BlueprintCallable)
+		void CalculateSlopeRotation();
 	//Vector
 	FVector2D mouseInput;
 
@@ -116,6 +118,13 @@ public:
 	int PlayerID;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	int Grounded;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float GroundedNormal;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float GroundedRotationValue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	FVector GroundedForward;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FRotator GroundRotation;
@@ -168,6 +177,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		float ReturnVelocity();
 
+
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
 	class UCapsuleComponent* FrontTriggerCapsule;
 
@@ -181,6 +191,7 @@ public:
 	class UCapsuleComponent* RightTriggerCapsule;
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
-		class UCapsuleComponent* GroundedCapsule;
+	class UCapsuleComponent* GroundCapsule;
+
 
 };
