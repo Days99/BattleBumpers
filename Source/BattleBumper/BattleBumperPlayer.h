@@ -23,11 +23,21 @@ public:
 	UPROPERTY(EditAnywhere)
 		bool collision = false;
 
+	UPROPERTY(replicated, EditAnywhere)
+		bool WasHit = false;
+
 	UPROPERTY(EditAnywhere)
 		bool collisionleft = false;
 
 	UPROPERTY(EditAnywhere)
 		bool collisionright = false;
+
+	UPROPERTY(Replicated, EditAnywhere)
+		FVector CollsionVector;
+
+	UPROPERTY(Replicated, EditAnywhere)
+		float ImpactStrenght;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -46,10 +56,13 @@ public:
 	AActor* MyOwner;
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void Server_ReliableFunctionCallThatRunsOnServer(FVector NewLocation, FRotator NewRotation);
+	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(FVector NewLocation, FRotator NewRotation);
+		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v);
 
 	
 	// Called to bind functionality to input
@@ -66,6 +79,7 @@ public:
 	void StartGrowing();
 	void StopGrowing();
 	void UseBoost();
+	void BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	void mouseYawn(float axis);
 	void mousePitch(float axis);
@@ -86,8 +100,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* myMesh;
 	//Input variables
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	FVector ServerVelocity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxVelocityX = 1200;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -132,8 +148,8 @@ public:
 	bool bGrowing;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool boosted;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
-	AActor * CollidedActor;
+	UPROPERTY(replicated, EditAnywhere, BlueprintReadWrite, Category = "Collision")
+	ABattleBumperPlayer* CollidedActor;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
 		AActor* CollidedActor2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
