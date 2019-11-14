@@ -258,12 +258,12 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
-		if (Grounded > 0) {
+		if (Grounded > 0 ) {
 			CalculateSlopeRotation();
 			if (NewRotation.Pitch < GroundRotation.Pitch && GroundRotation.Pitch > 0) {
 				NewRotation.Pitch += (40 + (5 * GroundRotation.Pitch * CurrentVelocity.X / maxVelocityX))* DeltaTime;
 			}
-			else if (NewRotation.Pitch > GroundRotation.Pitch&& GroundRotation.Pitch < 0) {
+			else if (NewRotation.Pitch > GroundRotation.Pitch && GroundRotation.Pitch < 0) {
 				NewRotation.Pitch -= (40 + (5 * GroundRotation.Pitch * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
 
 			}
