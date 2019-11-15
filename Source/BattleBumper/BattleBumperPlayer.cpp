@@ -285,7 +285,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			NewLocation = NewLocation + (HandbrakeForward * (ServerVelocity.X / 40)) / HandbrakeNormal * DeltaTime;
 		}
 		if (Grounded <= 0) {
-			NewLocation = NewLocation + CollsionVector*ImpactStrenght/90 + (GetActorUpVector() * (-300 * DeltaTime));
+			NewLocation = NewLocation + (CollsionVector*ImpactStrenght + (GetActorUpVector() * -350 ))* DeltaTime;
 		}
 		if (WasHit)
 		{		
