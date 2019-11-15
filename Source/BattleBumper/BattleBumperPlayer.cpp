@@ -13,6 +13,7 @@
 #include "GameFramework/Actor.h"
 #include "math.h"
 #include "GroundActor.h"
+#include "TimerManager.h"
 
 
 // Sets default values
@@ -284,17 +285,23 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			NewLocation = NewLocation + (HandbrakeForward * (ServerVelocity.X / 40)) / HandbrakeNormal * DeltaTime;
 		}
 		if (Grounded <= 0) {
-			NewLocation = NewLocation + (GetActorUpVector() * (-100 * DeltaTime));
+			NewLocation = NewLocation + CollsionVector*ImpactStrenght/90 + (GetActorUpVector() * (-300 * DeltaTime));
 		}
 		if (WasHit)
-		{
-			NewLocation += (CollsionVector * ImpactStrenght * 10) * DeltaTime;
+		{		
+			NewLocation += (CollsionVector * ImpactStrenght * 2 + GetActorUpVector() * ImpactStrenght*2) * DeltaTime;
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X);
 
 	}
 }
+void ABattleBumperPlayer::CollisionFalse()
+{
+	WasHit = false;
+	GetWorldTimerManager().ClearTimer(DelayTimer);
+}
+
 void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation, FRotator NewRotation, float v)
 {
 	if(Role == ROLE_Authority)
@@ -309,9 +316,10 @@ void ABattleBumperPlayer::Server_BumperCollision_Implementation(FVector NImpactN
 {
 	if (Role == ROLE_Authority)
 	{
-		CollsionVector = NImpactNormal + NForwardVector;
+		CollsionVector = -NImpactNormal + NForwardVector;
 		ImpactStrenght = NImpactStrenght;
 		WasHit = true;
+		GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &ABattleBumperPlayer::CollisionFalse, 1.0f, false);
 	}
 }
 

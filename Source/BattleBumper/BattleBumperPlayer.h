@@ -38,6 +38,15 @@ public:
 	UPROPERTY(Replicated, EditAnywhere)
 		float ImpactStrenght;
 
+	UPROPERTY(EditAnywhere)
+		float Timer;
+
+	UPROPERTY(EditAnywhere)
+		float TimeCounter;
+
+	UPROPERTY(EditAnywhere)
+		FTimerHandle DelayTimer;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -79,6 +88,7 @@ public:
 	void StartGrowing();
 	void StopGrowing();
 	void UseBoost();
+	void CollisionFalse();
 	void BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	void mouseYawn(float axis);
