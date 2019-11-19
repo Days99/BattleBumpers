@@ -516,8 +516,7 @@ void ABattleBumperPlayer::OnOverlapEnd2(class UPrimitiveComponent* OverlappedCom
 
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor2 = OtherActor;
-	
+		CollidedActor2 = OtherActor;	
 		if (CollidedActor2->GetName() == "Wall") {
 			collision = false;
 		}
@@ -543,7 +542,6 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		if (ground) {
 			collisionleft = true;
 		}
-
 		if (CollidedActor2->GetName() == "Wall") {
 			collisionleft = true;
 		}
