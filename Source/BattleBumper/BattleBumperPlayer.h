@@ -60,6 +60,8 @@ public:
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimerWorld;
 
+	float previousGroundedNormal;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -78,13 +80,13 @@ public:
 	AActor* MyOwner;
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity);
+	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v);
+		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d);
 
 	
 	// Called to bind functionality to input
@@ -163,6 +165,8 @@ public:
 	float GroundedNormal;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float GroundedRotationValue;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Death")
+		FTransform respawnTransform;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector GroundedForward;
