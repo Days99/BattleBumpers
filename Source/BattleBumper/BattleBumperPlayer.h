@@ -36,6 +36,9 @@ public:
 		bool collisionright = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
+		bool AddDamage = false;
+
+	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVector;
 
 	UPROPERTY(Replicated, EditAnywhere)
@@ -46,6 +49,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float TimeCounter;
+
+
+	UPROPERTY(Replicated, EditAnywhere)
+		float CurrentDamage;
 
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
@@ -114,7 +121,7 @@ public:
 	UCameraComponent* camera;
 	
 	
-
+	
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* myMesh;
 	//Input variables
@@ -212,6 +219,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		float ReturnVelocity();
+
+	UFUNCTION(BlueprintCallable)
+		float ReturnDamage();
 
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")

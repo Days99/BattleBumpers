@@ -254,7 +254,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 
-
+	
 	// Handle movement based on our "MoveX" and "MoveY" axes
 
 	if (!CurrentVelocity.IsZero() || !CurrentRotation.IsZero() || Grounded >= 0)
@@ -291,8 +291,16 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		}
 		
 		if (WasHit)
-		{		
-			NewLocation += (CollsionVector * ImpactStrenght * 2 + GetActorUpVector() * ImpactStrenght*2) * DeltaTime;
+		{
+			if(ImpactStrenght >= 800)
+			NewLocation += (CollsionVector * ImpactStrenght + CollsionVector * CurrentDamage*5 + GetActorUpVector() * ImpactStrenght) * DeltaTime;
+			else if (ImpactStrenght < 800)
+			NewLocation += (CollsionVector * ImpactStrenght*2 + CollsionVector * CurrentDamage*5) * DeltaTime;
+		}
+		if (AddDamage)
+		{
+			CurrentDamage += ImpactStrenght*DeltaTime;;
+			AddDamage = false;
 		}
 		
 		if (HitWorld)
@@ -332,8 +340,11 @@ void ABattleBumperPlayer::Server_BumperCollision_Implementation(FVector NImpactN
 	{
 		CollsionVector = -NImpactNormal + NForwardVector;
 		ImpactStrenght = NImpactStrenght;
+		
 		WasHit = true;
+		AddDamage = true;
 		GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &ABattleBumperPlayer::CollisionFalse, 1.0f, false);
+		
 	}
 }
 
@@ -344,10 +355,12 @@ bool ABattleBumperPlayer::Server_BumperCollision_Validate(FVector NImpactNormal,
 
 void ABattleBumperPlayer::BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght)
 {
+	
 	if (Role == ROLE_Authority)
 	{
 		Server_BumperCollision(NImpactNormal, NForwardVector, NImpactStrenght);
 	}
+	
 }
 
 void ABattleBumperPlayer::WorldCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght)
@@ -366,8 +379,8 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 {
 	a->SetActorLocationAndRotation(NewLocation, NewRotation);
 	a->ServerVelocity.X = v;
+	
 }
-
 // Called to bind functionality to input
 void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -483,7 +496,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			collision = true,
+			collision = true;
 			WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 100);
 		}
 		
@@ -523,7 +536,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 	{
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			collision = true,
+			collision = true;
 				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), -100);
 		}
 		
@@ -572,7 +585,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 	{
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			collision = true,
+			collision = true;
 				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 100);
 		}
 		CollidedActor2 = OtherActor;
@@ -615,7 +628,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 	{
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			collision = true,
+			collision = true;
 				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 100);
 		}
 		CollidedActor2 = OtherActor;
@@ -638,6 +651,11 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 float ABattleBumperPlayer::ReturnVelocity() {
 	return CurrentVelocity.X;
 }
+
+float ABattleBumperPlayer::ReturnDamage() {
+	return CurrentDamage;
+}
+
 
 void ABattleBumperPlayer::OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
