@@ -26,6 +26,9 @@ public:
 	UPROPERTY(replicated, EditAnywhere)
 		bool WasHit = false;
 
+	UPROPERTY(replicated, EditAnywhere)
+		bool HitWorld = false;
+
 	UPROPERTY(EditAnywhere)
 		bool collisionleft = false;
 
@@ -46,6 +49,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
+
+	UPROPERTY(EditAnywhere)
+		FTimerHandle DelayTimerWorld;
 
 
 protected:
@@ -89,6 +95,8 @@ public:
 	void StopGrowing();
 	void UseBoost();
 	void CollisionFalse();
+	void CollisionWorldFalse();
+	void WorldCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 	void BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	void mouseYawn(float axis);
@@ -199,6 +207,8 @@ public:
 	UFUNCTION()
 		void OnOverlapEndGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+
+	
 
 	UFUNCTION(BlueprintCallable)
 		float ReturnVelocity();
