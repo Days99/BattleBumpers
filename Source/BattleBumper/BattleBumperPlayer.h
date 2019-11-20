@@ -47,6 +47,8 @@ public:
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
 
+	float previousGroundedNormal;
+
 
 protected:
 	// Called when the game starts or when spawned

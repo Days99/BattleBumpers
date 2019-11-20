@@ -259,16 +259,21 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
-		if (Grounded > 0 ) {
+		if (Grounded > 0) {
 			CalculateSlopeRotation();
+				float difference = NewRotation.Pitch - GroundRotation.Pitch;
+				if (difference < 0)
+					difference *= -1;
+
 			if (NewRotation.Pitch < GroundRotation.Pitch) {
-				NewRotation.Pitch += (40 + (5 * GroundRotation.Pitch * CurrentVelocity.X / maxVelocityX))* DeltaTime;
+				NewRotation.Pitch += (25 + (20 * GroundRotation.Pitch * ServerVelocity.X / maxVelocityX))* DeltaTime;
 			}
 			else if (NewRotation.Pitch > GroundRotation.Pitch) {
-				NewRotation.Pitch -= (40 + (5 * GroundRotation.Pitch * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
+				NewRotation.Pitch -= (25 + (20 * GroundRotation.Pitch * ServerVelocity.X / maxVelocityX)) * DeltaTime;
 			}
-			if (GroundRotation.Pitch == 0 && NewRotation.Pitch != 0) {
-				NewRotation.Pitch = 0;
+			
+				if (difference < 5) {
+				NewRotation.Pitch = GroundRotation.Pitch;
 			}
 		}
 		else if (NewRotation.Pitch > -20 && Grounded == 0)
@@ -643,8 +648,8 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 					GroundedRotationValue = Rotation.Z;
 					CalculateSlopeRotation();
 				}
-				else if (Rotation.Z == 0 && Rotation.X == 0 && Grounded >= 1) {
-					//GroundedRotationValue = 0;
+				if (Rotation.Z == 0 && Rotation.X == 0  && Grounded < 2) {
+					GroundedRotationValue = 0;
 					GroundRotation.Pitch = 0;
 				}
 
@@ -662,14 +667,16 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 		if (actor) {
 			//GroundRotation = nullptr;
 			Grounded--;
-			if (GetActorRotation().Pitch > 0 && Grounded == 0) {
-				GroundRotation.Pitch = -GetActorRotation().Pitch;
-			}
+			//if (GetActorRotation().Pitch > 0 && Grounded == 0) {
+			//	GroundRotation.Pitch = -GetActorRotation().Pitch;
+			//}
 		}
 	}
 }
 
 void ABattleBumperPlayer::CalculateSlopeRotation(){
+	if(GroundedNormal != previousGroundedNormal)
+	previousGroundedNormal = GroundedNormal;
 	GroundedNormal = FVector::DotProduct(GroundedForward, GetActorForwardVector());
 	GroundRotation.Pitch = GroundedRotationValue * FVector::DotProduct(GroundedForward, GetActorForwardVector());
 }
