@@ -158,6 +158,8 @@ public:
 	float GroundedNormal;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float GroundedRotationValue;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Death")
+		FTransform respawnTransform;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector GroundedForward;

@@ -13,8 +13,8 @@
 #include "GameFramework/Actor.h"
 #include "math.h"
 #include "GroundActor.h"
+#include "DeathZoneActor.h"
 #include "TimerManager.h"
-#include "WallActor.h"
 
 
 // Sets default values
@@ -25,6 +25,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	PrimaryActorTick.bCanEverTick = true;
 
 	MyOwner = GetOwner();
+	respawnTransform = GetActorTransform();
 
 	// Create a dummy root component we can attach things to.
 	
@@ -96,7 +97,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
+	//DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
 }
 
 // Called when the game starts or when spawned
@@ -144,7 +145,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentVelocity.X = 0;
 		CurrentAcceleration.X = 0;
-		collision = false;
 	}
 
 	if (collisionright == true)
@@ -263,20 +263,17 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
 		if (Grounded > 0) {
 			CalculateSlopeRotation();
-				float difference = NewRotation.Pitch - GroundRotation.Pitch;
-				if (difference < 0)
-					difference *= -1;
-
+			float difference;
 			if (NewRotation.Pitch < GroundRotation.Pitch) {
-				NewRotation.Pitch += (25 + (20 * GroundRotation.Pitch * ServerVelocity.X / maxVelocityX))* DeltaTime;
+				NewRotation.Pitch += (40 + (5 * GroundRotation.Pitch * CurrentVelocity.X / maxVelocityX))* DeltaTime;
+				difference = GroundRotation.Pitch - NewRotation.Pitch;
 			}
 			else if (NewRotation.Pitch > GroundRotation.Pitch) {
-				NewRotation.Pitch -= (25 + (20 * GroundRotation.Pitch * ServerVelocity.X / maxVelocityX)) * DeltaTime;
+				NewRotation.Pitch -= (40 + (5 * GroundRotation.Pitch * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
+				difference =  NewRotation.Pitch - GroundRotation.Pitch;
 			}
-			
-				if (difference < 5) {
+			if (difference < 1)
 				NewRotation.Pitch = GroundRotation.Pitch;
-			}
 		}
 		else if (NewRotation.Pitch > -20 && Grounded == 0)
 			NewRotation.Pitch -= (10 + (5 * ServerVelocity.X / maxVelocityX)) * DeltaTime;
@@ -294,15 +291,9 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		if (Grounded <= 0) {
 			NewLocation = NewLocation + (CollsionVector*ImpactStrenght + (GetActorUpVector() * -350 ))* DeltaTime;
 		}
-		
 		if (WasHit)
 		{		
 			NewLocation += (CollsionVector * ImpactStrenght * 2 + GetActorUpVector() * ImpactStrenght*2) * DeltaTime;
-		}
-		
-		if (HitWorld)
-		{
-			NewLocation += (CollsionVector * ImpactStrenght * 2) * DeltaTime;
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X);
@@ -313,12 +304,6 @@ void ABattleBumperPlayer::CollisionFalse()
 {
 	WasHit = false;
 	GetWorldTimerManager().ClearTimer(DelayTimer);
-}
-
-void ABattleBumperPlayer::CollisionWorldFalse()
-{
-	HitWorld = false;
-	GetWorldTimerManager().ClearTimer(DelayTimerWorld);
 }
 
 void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation, FRotator NewRotation, float v)
@@ -353,15 +338,6 @@ void ABattleBumperPlayer::BumperCollision(FVector NImpactNormal, FVector NForwar
 	{
 		Server_BumperCollision(NImpactNormal, NForwardVector, NImpactStrenght);
 	}
-}
-
-void ABattleBumperPlayer::WorldCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght)
-{
-	CollsionVector = NImpactNormal - NForwardVector;
-	ImpactStrenght = NImpactStrenght;
-	HitWorld = true;
-	GetWorld()->GetTimerManager().SetTimer(DelayTimerWorld, this, &ABattleBumperPlayer::CollisionWorldFalse, 1.0f, false);
-	
 }
 
 
@@ -482,16 +458,9 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 
 	//collision = true;
 		//collision = true; 
-	
+
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		
-		AWallActor* actor = Cast<AWallActor>(OtherActor);
-		if (actor) {
-			collision = true,
-			WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 100);
-		}
-		
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
 		if (CollidedActors)
 		{
@@ -526,12 +495,6 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		AWallActor* actor = Cast<AWallActor>(OtherActor);
-		if (actor) {
-			collision = true,
-				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), -100);
-		}
-		
 		CollidedActor2 = OtherActor;
 
 		AGroundActor* ground = Cast<AGroundActor>(OtherActor);
@@ -557,8 +520,6 @@ void ABattleBumperPlayer::OnOverlapEnd2(class UPrimitiveComponent* OverlappedCom
 
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-
-		
 		CollidedActor2 = OtherActor;	
 		if (CollidedActor2->GetName() == "Wall") {
 			collision = false;
@@ -575,11 +536,6 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		AWallActor* actor = Cast<AWallActor>(OtherActor);
-		if (actor) {
-			collision = true,
-				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 100);
-		}
 		CollidedActor2 = OtherActor;
 		//if (CollidedActor->Tags.Num() > 0) {
 		if (CollidedActor2->GetActorLabel() == "Boost" && boost < 3) {
@@ -618,11 +574,6 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		AWallActor* actor = Cast<AWallActor>(OtherActor);
-		if (actor) {
-			collision = true,
-				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 100);
-		}
 		CollidedActor2 = OtherActor;
 		//if (CollidedActor->Tags.Num() > 0) {
 		if (CollidedActor2->GetActorLabel() == "Boost" && boost < 3) {
@@ -669,7 +620,7 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 	{
 		AGroundActor * actor = Cast<AGroundActor>(OtherActor);
 		if (actor) {
-				Grounded++;
+			Grounded++;
 				//CurrentRotation.Roll = actor->GetActorRotation().Roll;
 				FVector Rotation = FVector(actor->GetActorRotation().Roll , 0, actor->GetActorRotation().Pitch);
 				FVector v = FVector::ZeroVector;
@@ -696,11 +647,15 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 					GroundedRotationValue = Rotation.Z;
 					CalculateSlopeRotation();
 				}
-				if (Rotation.Z == 0 && Rotation.X == 0  && Grounded < 2) {
+				else if (Rotation.Z == 0 && Rotation.X == 0 && Grounded >= 1) {
 					GroundedRotationValue = 0;
 					GroundRotation.Pitch = 0;
 				}
+		}
+		ADeathZoneActor * deathactor = Cast<ADeathZoneActor>(OtherActor);
 
+		if (deathactor) {
+			Destroy();
 		}
 	}
 }
@@ -715,16 +670,14 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 		if (actor) {
 			//GroundRotation = nullptr;
 			Grounded--;
-			//if (GetActorRotation().Pitch > 0 && Grounded == 0) {
-			//	GroundRotation.Pitch = -GetActorRotation().Pitch;
-			//}
+			if (GetActorRotation().Pitch > 0 && Grounded == 0) {
+				GroundRotation.Pitch = -GetActorRotation().Pitch;
+			}
 		}
 	}
 }
 
 void ABattleBumperPlayer::CalculateSlopeRotation(){
-	if(GroundedNormal != previousGroundedNormal)
-	previousGroundedNormal = GroundedNormal;
 	GroundedNormal = FVector::DotProduct(GroundedForward, GetActorForwardVector());
 	GroundRotation.Pitch = GroundedRotationValue * FVector::DotProduct(GroundedForward, GetActorForwardVector());
 }
