@@ -36,6 +36,9 @@ public:
 		bool collisionright = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
+		bool AddDamage = false;
+
+	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVector;
 
 	UPROPERTY(Replicated, EditAnywhere)
@@ -46,6 +49,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float TimeCounter;
+
+
+	UPROPERTY(Replicated, EditAnywhere)
+		float CurrentDamage;
 
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
@@ -73,13 +80,13 @@ public:
 	AActor* MyOwner;
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity);
+	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v);
+		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d);
 
 	
 	// Called to bind functionality to input
@@ -116,7 +123,7 @@ public:
 	UCameraComponent* camera;
 	
 	
-
+	
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* myMesh;
 	//Input variables
@@ -216,6 +223,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		float ReturnVelocity();
+
+	UFUNCTION(BlueprintCallable)
+		float ReturnDamage();
 
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")

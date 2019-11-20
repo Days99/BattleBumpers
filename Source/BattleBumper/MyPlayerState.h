@@ -18,4 +18,7 @@ class BATTLEBUMPER_API AMyPlayerState : public AGameStateBase
 public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	float ReturnPlayerVelocity(ABattleBumperPlayer * p);
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+		float ReturnPlayerDamage(ABattleBumperPlayer* p);
 };
