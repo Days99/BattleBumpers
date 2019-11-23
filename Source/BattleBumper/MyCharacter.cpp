@@ -22,6 +22,7 @@ AMyCharacter::AMyCharacter()
 	// Create a dummy root component we can attach things to.
 
 	// Create a camera and a visible object
+	
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 
 	
@@ -123,7 +124,6 @@ void AMyCharacter::Tick(float DeltaTime)
 	{
 		CurrentVelocity.X = 0;
 		CurrentAcceleration.X = 0;
-
 	}
 
 	if (collisionright == true)
@@ -133,7 +133,6 @@ void AMyCharacter::Tick(float DeltaTime)
 		if (CurrentAcceleration.Y >= 0)
 		{
 			CurrentAcceleration.Y = 0;
-
 		}
 	}
 
@@ -144,10 +143,7 @@ void AMyCharacter::Tick(float DeltaTime)
 		if (CurrentAcceleration.Y <= 0)
 		{
 			CurrentAcceleration.Y = 0;
-
 		}
-
-
 	}
 
 	if (CurrentVelocity.X >= dragX && CurrentAcceleration.X == 0)

@@ -54,6 +54,8 @@ public:
 	UPROPERTY(Replicated, EditAnywhere)
 		float CurrentDamage;
 
+	float oMaxVelocityY;
+
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
 
