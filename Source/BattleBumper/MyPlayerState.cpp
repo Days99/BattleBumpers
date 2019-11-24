@@ -14,3 +14,7 @@ float AMyPlayerState::ReturnPlayerVelocity(ABattleBumperPlayer * pawn) {
 float AMyPlayerState::ReturnPlayerDamage(ABattleBumperPlayer* pawn) {
 	return pawn->CurrentDamage;
 }
+
+int AMyPlayerState::ReturnPlayerLives(ABattleBumperPlayer* pawn) {
+	return pawn->Lives;
+}

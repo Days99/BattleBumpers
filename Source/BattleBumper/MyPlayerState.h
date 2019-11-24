@@ -21,4 +21,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 		float ReturnPlayerDamage(ABattleBumperPlayer* p);
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+		int ReturnPlayerLives(ABattleBumperPlayer* p);
 };

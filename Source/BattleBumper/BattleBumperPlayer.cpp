@@ -27,6 +27,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 	MyOwner = GetOwner();
 	respawnTransform = GetActorTransform();
+	Lives = 3;
 
 	// Create a dummy root component we can attach things to.
 	
@@ -105,7 +106,9 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
 	oMaxVelocityY = maxVelocityY;
+	respawnTransform = GetActorTransform();
 	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
 	FrontTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd);
 
@@ -115,6 +118,7 @@ void ABattleBumperPlayer::BeginPlay()
 
 	LeftTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin3);
 	LeftTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd3);
+	
 
 	RightTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin4);
 	RightTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd4);
@@ -198,7 +202,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	else {
 		maxVelocityY = oMaxVelocityY;
 	}
-	if (!uHandbrake)
+	if (!uHandbrake && !respawning)
 		CurrentVelocity.X += CurrentAcceleration.X;
 	
 	if (uHandbrake && CurrentVelocity.X > 0) {
@@ -261,67 +265,68 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
-		if (Grounded > 0) {
-			CalculateSlopeRotation();
-			float difference;
-			if (NewRotation.Pitch < GroundRotation.Pitch) {
-				NewRotation.Pitch += (40 + (5 * GroundRotation.Pitch * CurrentVelocity.X / maxVelocityX))* DeltaTime;
-				difference = GroundRotation.Pitch - NewRotation.Pitch;
+		FVector NewLocation = GetActorLocation();
+		if (!respawning) {
+			NewLocation += GetActorForwardVector() * ServerVelocity.X * DeltaTime;
+			if (Grounded > 0) {
+				CalculateSlopeRotation();
+				float difference;
+				if (NewRotation.Pitch < GroundRotation.Pitch) {
+					NewRotation.Pitch += (65 + GroundedRotationValue * 8) * DeltaTime;
+					difference = GroundRotation.Pitch - NewRotation.Pitch;
+				}
+				else if (NewRotation.Pitch > GroundRotation.Pitch) {
+					NewRotation.Pitch -= (65 + GroundedRotationValue * 8) * DeltaTime;
+					difference = NewRotation.Pitch - GroundRotation.Pitch;
+				}
+				if (difference < 1)
+					NewRotation.Pitch = GroundRotation.Pitch;
 			}
-			else if (NewRotation.Pitch > GroundRotation.Pitch) {
-				NewRotation.Pitch -= (40 + (5 * GroundRotation.Pitch * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
-				difference =  NewRotation.Pitch - GroundRotation.Pitch;
-			}
-			if (difference < 1)
-				NewRotation.Pitch = GroundRotation.Pitch;
-		}
-		else if (NewRotation.Pitch > -20 && Grounded == 0)
-			NewRotation.Pitch -= (10 + (5 * ServerVelocity.X / maxVelocityX)) * DeltaTime;
+			else if (NewRotation.Pitch > -20 && Grounded == 0)
+				NewRotation.Pitch -= (30 + (10 * ServerVelocity.X / maxVelocityX)) * DeltaTime;
 
-		
-
-		FVector NewLocation = GetActorLocation() + (GetActorForwardVector() * ServerVelocity.X * DeltaTime);
-		if (uHandbrake && !CurrentVelocity.IsZero()) {
-			HandbrakeNormal = FVector::DotProduct(GetActorForwardVector(), HandbrakeForward);
-			if (HandbrakeNormal < 0.1) {
-				HandbrakeNormal = 0.3;
+			if (uHandbrake && !CurrentVelocity.IsZero()) {
+				HandbrakeNormal = FVector::DotProduct(GetActorForwardVector(), HandbrakeForward);
+				if (HandbrakeNormal < 0.1) {
+					HandbrakeNormal = 0.3;
+				}
+				NewLocation = NewLocation + (HandbrakeForward * (ServerVelocity.X / 40)) / HandbrakeNormal * DeltaTime;
 			}
-			NewLocation = NewLocation + (HandbrakeForward * (ServerVelocity.X / 40)) / HandbrakeNormal * DeltaTime;
-		}
-		if (Grounded <= 0) {
-			NewLocation = NewLocation + (CollsionVector*ImpactStrenght + (GetActorUpVector() * -350 ))* DeltaTime;
-		}
-		if (WasHit)
-		{
-			if (ImpactStrenght >= 800)
-			{
-				NewLocation += (CollsionVector * ImpactStrenght + CollsionVector * CurrentDamage * 5 + GetActorUpVector() * ImpactStrenght) * DeltaTime;
-				NewRotation.Yaw += CollsionVector.Rotation().Yaw / 50;
+			if (Grounded <= 0) {
+				NewLocation = NewLocation + (CollsionVector * ImpactStrenght + (GetActorUpVector() * -350)) * DeltaTime;
 			}
-			else if (ImpactStrenght >= 700)
+			if (WasHit)
 			{
-			NewLocation += (CollsionVector * ImpactStrenght + CollsionVector * CurrentDamage*5 + GetActorUpVector() * ImpactStrenght/2) * DeltaTime;
-			NewRotation.Yaw += CollsionVector.Rotation().Yaw / 55;
-		}
-			else if (ImpactStrenght >= 600)
-			{
-				NewLocation += (CollsionVector * ImpactStrenght + CollsionVector * CurrentDamage * 5 + GetActorUpVector() * ImpactStrenght / 2) * DeltaTime;
-				NewRotation.Yaw += CollsionVector.Rotation().Yaw / 60;
+				if (ImpactStrenght >= 800)
+				{
+					NewLocation += (CollsionVector * ImpactStrenght + CollsionVector * CurrentDamage * 5 + GetActorUpVector() * ImpactStrenght) * DeltaTime;
+					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 50;
+				}
+				else if (ImpactStrenght >= 700)
+				{
+					NewLocation += (CollsionVector * ImpactStrenght + CollsionVector * CurrentDamage * 5 + GetActorUpVector() * ImpactStrenght / 2) * DeltaTime;
+					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 55;
+				}
+				else if (ImpactStrenght >= 600)
+				{
+					NewLocation += (CollsionVector * ImpactStrenght + CollsionVector * CurrentDamage * 5 + GetActorUpVector() * ImpactStrenght / 2) * DeltaTime;
+					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 60;
+				}
+				else if (ImpactStrenght < 600)
+				{
+					NewLocation += (CollsionVector * ImpactStrenght * 2 + CollsionVector * CurrentDamage * 5) * DeltaTime;
+					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 70;
+				}
 			}
-			else if (ImpactStrenght < 600)
+			if (AddDamage)
 			{
-				NewLocation += (CollsionVector * ImpactStrenght * 2 + CollsionVector * CurrentDamage * 5) * DeltaTime;
-				NewRotation.Yaw += CollsionVector.Rotation().Yaw/70;
+				CurrentDamage += ImpactStrenght * DeltaTime;;
+				AddDamage = false;
 			}
-		}
-		if (AddDamage)
-		{
-			CurrentDamage += ImpactStrenght*DeltaTime;;
-			AddDamage = false;
-		}
-		if (HitWorld)
-		{
-			NewLocation += (CollsionVector * ImpactStrenght * 2) * DeltaTime;
+			if (HitWorld)
+			{
+				NewLocation += (CollsionVector * ImpactStrenght * 2) * DeltaTime;
+			}
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage);
@@ -696,8 +701,14 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 		AGroundActor * actor = Cast<AGroundActor>(OtherActor);
 		if (actor) {
 			Grounded++;
+			currentDistanceZ = FVector::Dist(GetActorLocation(), OverlappedComp->GetComponentLocation());
+			if (DistanceZ == 0.0f) {
+				DistanceZ = currentDistanceZ;
+			}
 				//CurrentRotation.Roll = actor->GetActorRotation().Roll;
+
 				FVector Rotation = FVector(actor->GetActorRotation().Roll , 0, actor->GetActorRotation().Pitch);
+				FVector CurrentRotation = GetActorRotation().Vector();
 				FVector v = FVector::ZeroVector;
 				if (Rotation.X < 0) {
 					v = actor->GetActorRightVector();
@@ -722,7 +733,11 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 					GroundedRotationValue = Rotation.Z;
 					CalculateSlopeRotation();
 				}
-				else if (Rotation.Z == 0 && Rotation.X == 0 && Grounded >= 1) {
+				if (Rotation.Z == 0 && Rotation.X == 0 && currentDistanceZ  <  DistanceZ) {
+					GroundedRotationValue = 5;
+					GroundRotation.Pitch = 5;
+				}
+				else if(Rotation.Z == 0 && Rotation.X == 0 && currentDistanceZ >= DistanceZ ) {
 					GroundedRotationValue = 0;
 					GroundRotation.Pitch = 0;
 				}
@@ -730,9 +745,18 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 		ADeathZoneActor * deathactor = Cast<ADeathZoneActor>(OtherActor);
 
 		if (deathactor) {
-			Destroy();
+			SetActorTransform(respawnTransform);
+			respawning = true;
+			CurrentVelocity.X = 0;
+			CurrentDamage = 0;
+			Lives -= 1;
+			GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn,	4.0f, false);
 		}
 	}
+}
+
+void ABattleBumperPlayer::Respawn() {
+	respawning = false;
 }
 
 void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -745,15 +769,18 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 		if (actor) {
 			//GroundRotation = nullptr;
 			Grounded--;
-			if (GetActorRotation().Pitch > 0 && Grounded == 0) {
-				GroundRotation.Pitch = -GetActorRotation().Pitch;
-			}
+
+			//if (GetActorRotation().Pitch > 0 && Grounded == 0) {
+			//	GroundRotation.Pitch = -GetActorRotation().Pitch;
+			//}
 		}
 	}
 }
 
 void ABattleBumperPlayer::CalculateSlopeRotation(){
 	GroundedNormal = FVector::DotProduct(GroundedForward, GetActorForwardVector());
-	GroundRotation.Pitch = GroundedRotationValue * FVector::DotProduct(GroundedForward, GetActorForwardVector());
+	GroundRotation.Pitch = GroundedRotationValue;
+	if ((FVector::DotProduct(GroundedForward, GetActorForwardVector())) != 0)
+		GroundRotation.Pitch *= FVector::DotProduct(GroundedForward, GetActorForwardVector());
 }
 

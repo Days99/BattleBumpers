@@ -54,6 +54,8 @@ public:
 	UPROPERTY(Replicated, EditAnywhere)
 		float CurrentDamage;
 
+	UPROPERTY(EditAnywhere)
+		int Lives;
 	float oMaxVelocityY;
 
 	UPROPERTY(EditAnywhere)
@@ -65,9 +67,12 @@ public:
 	float previousGroundedNormal;
 
 
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	void Respawn();
 
 public:	
 	// Called every frame
@@ -123,9 +128,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	UCameraComponent* camera;
-	
-	
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float DistanceZ;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float currentDistanceZ;
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* myMesh;
 	//Input variables
@@ -169,6 +175,8 @@ public:
 	float GroundedRotationValue;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Death")
 		FTransform respawnTransform;
+	bool respawning;
+	FTimerHandle respawningTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector GroundedForward;
