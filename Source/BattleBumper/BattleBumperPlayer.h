@@ -42,7 +42,13 @@ public:
 		FVector CollsionVector;
 
 	UPROPERTY(Replicated, EditAnywhere)
+		FVector CollsionVectorWorld;
+
+	UPROPERTY(Replicated, EditAnywhere)
 		float ImpactStrenght;
+
+	UPROPERTY(Replicated, EditAnywhere)
+		float ImpactStrenghtWorld;
 
 	UPROPERTY(EditAnywhere)
 		float Timer;
@@ -132,6 +138,10 @@ public:
 	float DistanceZ;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float currentDistanceZ;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		FVector CollisionTreshold;
+	
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* myMesh;
 	//Input variables
