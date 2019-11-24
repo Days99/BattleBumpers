@@ -42,7 +42,13 @@ public:
 		FVector CollsionVector;
 
 	UPROPERTY(Replicated, EditAnywhere)
+		FVector CollsionVectorWorld;
+
+	UPROPERTY(Replicated, EditAnywhere)
 		float ImpactStrenght;
+
+	UPROPERTY(Replicated, EditAnywhere)
+		float ImpactStrenghtWorld;
 
 	UPROPERTY(EditAnywhere)
 		float Timer;
@@ -123,6 +129,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	UCameraComponent* camera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		FVector CollisionTreshold;
 	
 	
 	
