@@ -139,6 +139,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float currentDistanceZ;
 
+	float locationZ;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		FVector CollisionTreshold;
 	

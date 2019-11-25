@@ -61,7 +61,6 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	springArm->AttachTo(RootComponent);
 	springArm->TargetArmLength = 450.0f;
 	
-	springArm->SetWorldRotation(FRotator(-60.f,0.0f,0.0f));
 
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
 
@@ -106,7 +105,6 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-
 	oMaxVelocityY = maxVelocityY;
 	respawnTransform = GetActorTransform();
 	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
@@ -135,15 +133,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 	// Handle growing and shrinking based on our "Grow" action
 
-	FRotator newYawn = GetActorRotation();
-	
-	newYawn.Yaw += mouseInput.X;
-	
 
-	FRotator newPitch = springArm->GetComponentRotation();
-	newPitch.Yaw += mouseInput.X;
-	newPitch.Pitch += mouseInput.Y;
-	springArm->SetWorldRotation(newPitch);
 
 
 	if (collision == true)
@@ -258,7 +248,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 
-	
 	// Handle movement based on our "MoveX" and "MoveY" axes
 
 	//if (!CurrentVelocity.IsZero() || !CurrentRotation.IsZero() || Grounded >= 0 || collision)
@@ -268,15 +257,16 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		FVector NewLocation = GetActorLocation();
 		if (!respawning) {
 			NewLocation += GetActorForwardVector() * ServerVelocity.X * DeltaTime;
+
 			if (Grounded > 0) {
 				CalculateSlopeRotation();
 				float difference;
 				if (NewRotation.Pitch < GroundRotation.Pitch) {
-					NewRotation.Pitch += (65 + GroundedRotationValue * 5) * DeltaTime;
+					NewRotation.Pitch += (100 + GroundedRotationValue * 3) * DeltaTime;
 					difference = GroundRotation.Pitch - NewRotation.Pitch;
 				}
 				else if (NewRotation.Pitch > GroundRotation.Pitch) {
-					NewRotation.Pitch -= (65 + GroundedRotationValue * 5) * DeltaTime;
+					NewRotation.Pitch -= (100 + GroundedRotationValue * 3) * DeltaTime;
 					difference = NewRotation.Pitch - GroundRotation.Pitch;
 				}
 				if (difference < 1)
@@ -329,6 +319,10 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				NewLocation += (CollsionVectorWorld * 500 * 2 + CollsionVectorWorld * CurrentVelocity.X * 2) * DeltaTime;
 
 			}
+			if (locationZ > 0) {
+				NewLocation.Z = GetActorLocation().Z + locationZ;
+				locationZ = 0;
+			}
 
 			if (collision)
 			{
@@ -338,6 +332,13 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage);
+
+		FRotator newPitch = springArm->GetComponentRotation();
+		newPitch.Yaw += mouseInput.X;
+		newPitch.Roll = 0;
+		newPitch.Pitch = -20;
+
+		springArm->SetWorldRotation(newPitch);
 
 	
 }
@@ -732,11 +733,13 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 		AGroundActor * actor = Cast<AGroundActor>(OtherActor);
 		if (actor) {
 			Grounded++;
-			currentDistanceZ = FVector::Dist(GetActorLocation(), OverlappedComp->GetComponentLocation());
+			//if(actor->type != 0)
+			currentDistanceZ = FVector::DistXY(GetActorLocation(), OverlappedComp->GetComponentLocation());
 			if (DistanceZ == 0.0f) {
 				DistanceZ = currentDistanceZ;
 			}
-				//CurrentRotation.Roll = actor->GetActorRotation().Roll;
+			locationZ =  DistanceZ - currentDistanceZ;
+				//CurrentRotation.Roll = actor->GetActorRotation().Roll;		
 
 				FVector Rotation = FVector(actor->GetActorRotation().Roll , 0, actor->GetActorRotation().Pitch);
 				FVector CurrentRotation = GetActorRotation().Vector();
@@ -764,11 +767,7 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 					GroundedRotationValue = Rotation.Z;
 					CalculateSlopeRotation();
 				}
-				if (Rotation.Z == 0 && Rotation.X == 0 && currentDistanceZ  <  DistanceZ) {
-					GroundedRotationValue = 15;
-					GroundRotation.Pitch = 15;
-				}
-				else if(Rotation.Z == 0 && Rotation.X == 0 && currentDistanceZ >= DistanceZ ) {
+				if(Rotation.Z == 0 && Rotation.X == 0 ) {
 					GroundedRotationValue = 0;
 					GroundRotation.Pitch = 0;
 				}

@@ -21,6 +21,8 @@ protected:
 
 public:	
 	// Called every frame
+	UPROPERTY(EditAnywhere)
+		int type;
 	virtual void Tick(float DeltaTime) override;
 
 };
