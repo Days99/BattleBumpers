@@ -43,6 +43,10 @@ public:
 
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVectorWorld;
+	UPROPERTY(EditAnywhere)
+		FVector ForwardWall;
+	FVector PreviousLocation;
+
 
 	UPROPERTY(Replicated, EditAnywhere)
 		float ImpactStrenght;
@@ -64,6 +68,9 @@ public:
 		int Lives;
 	float oMaxVelocityY;
 
+	FVector impactVector;
+
+	float offset;
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
 
@@ -72,6 +79,7 @@ public:
 
 	float previousGroundedNormal;
 
+	float impactStrnght;
 
 
 protected:
@@ -85,9 +93,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	UPROPERTY(EditAnywhere, replicated)
 	UBoxComponent* OurCollider;
-
-	UPROPERTY(EditAnywhere, replicated)
-	UCharacterMovementComponent* MovementCharacter;
 
 	UPROPERTY(replicated)
 	AActor* MyOwner;
