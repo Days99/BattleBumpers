@@ -34,7 +34,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// Create a camera and a visible object
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	myMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
-	MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
+	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
 	UStaticMesh * Asset = MeshAsset.Object;
 	myMesh->SetStaticMesh(Asset);
@@ -255,6 +255,9 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
 		FVector NewLocation = GetActorLocation();
+		if (!WasHit)
+			PreviousLocation = NewLocation;
+		//	CollisionTreshold = NewLocation;
 		if (!respawning) {
 			NewLocation += GetActorForwardVector() * ServerVelocity.X * DeltaTime;
 
@@ -283,28 +286,30 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				NewLocation = NewLocation + (HandbrakeForward * (ServerVelocity.X / 40)) / HandbrakeNormal * DeltaTime;
 			}
 			if (Grounded <= 0) {
-				NewLocation = NewLocation + (CollsionVector * ImpactStrenght + (GetActorUpVector() * -350)) * DeltaTime;
+				NewLocation = NewLocation + (GetActorUpVector() * -350) * DeltaTime;
 			}
+			float impactStrnght = 0;
 			if (WasHit && collision == false)
 			{
-				if (ImpactStrenght >= 800 && collision == false && HitWorld == false)
+				impactStrnght = (ImpactStrenght / 500) * (CurrentDamage / 2);
+				if (ImpactStrenght >= 2000 )
 				{
-					NewLocation += (CollsionVector * ImpactStrenght / 2000 + CollsionVector * CurrentDamage * 5 + GetActorUpVector() * ImpactStrenght / 200) * DeltaTime;
+					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage) *1.3f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage) / 2))) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 50;
 				}
-				else if (ImpactStrenght >= 700 && collision == false && HitWorld == false)
+				else if (ImpactStrenght >= 1500 )
 				{
-					NewLocation += (CollsionVector * ImpactStrenght / 2000 + CollsionVector * CurrentDamage * 5 + GetActorUpVector() * ImpactStrenght / 250) * DeltaTime;
+					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage) * 1.1f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage) / 3) )) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 55;
 				}
-				else if (ImpactStrenght >= 600 && collision == false && HitWorld == false)
+				else if (ImpactStrenght >= 1000)
 				{
-					NewLocation += (CollsionVector * ImpactStrenght / 2000 + CollsionVector * CurrentDamage * 5 + GetActorUpVector() * ImpactStrenght / 2000) * DeltaTime;
+					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage))) + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/4)) )* DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 60;
 				}
-				else if (ImpactStrenght < 600 && collision == false && HitWorld == false)
+				else if (ImpactStrenght < 999)
 				{
-					NewLocation += (CollsionVector * ImpactStrenght / 2000 * 2 + CollsionVector * CurrentDamage * 5) * DeltaTime;
+					NewLocation += (CollsionVector * ((ImpactStrenght + CurrentDamage) )) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 70;
 				}
 			}
@@ -313,22 +318,34 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				CurrentDamage += ImpactStrenght * DeltaTime;;
 				AddDamage = false;
 			}
-			if (HitWorld)
-			{
-
-				NewLocation += (CollsionVectorWorld * 500 * 2 + CollsionVectorWorld * CurrentVelocity.X * 2) * DeltaTime;
-
-			}
-			if (locationZ > 0) {
-				NewLocation.Z = GetActorLocation().Z + locationZ;
-				locationZ = 0;
-			}
-
 			if (collision)
 			{
-				NewLocation = CollisionTreshold;
-				collision = false;
+				NewLocation = CollisionTreshold + CollsionVectorWorld*5;
+				NewLocation -= (CollisionTreshold + CollsionVectorWorld) * DeltaTime;
+				//CollisionTreshold += CollsionVectorWorld * 100;
+			
+					
+	/*			if (impactStrnght > 0) {
+					CollisionTreshold.X += -CollsionVector.X  * impactStrnght;
+				}
+*/
 			}
+			else if (HitWorld)
+			{
+			
+					WasHit = false;
+				
+				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;
+				
+
+			}
+			//if (locationZ > 0) {
+			//	NewLocation.Z = GetActorLocation().Z + locationZ;
+			//	locationZ = 0;
+			//}
+
+
+
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage);
@@ -387,6 +404,8 @@ void ABattleBumperPlayer::BumperCollision(FVector NImpactNormal, FVector NForwar
 void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d)
 {
 	a->SetActorLocationAndRotation(NewLocation, NewRotation);
+	if(a->collision)
+		a->SetActorLocationAndRotation(a->CollisionTreshold, NewRotation);
 	a->ServerVelocity.X = v;
 	a->CurrentDamage = d;
 	
@@ -507,8 +526,11 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		if (actor) {
 			if (collision == false)
 			{
+				WasHit = false;
 				CollisionTreshold = GetActorLocation();
 				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), -1);
+				
+
 				collision = true;
 			}
 		}
@@ -537,6 +559,7 @@ void ABattleBumperPlayer::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			collision = false;
+			//CollisionTreshold = FVector::ZeroVector;
 		}
 		CollidedActor2 = OtherActor;
 		if (CollidedActor2->GetName() == "Wall") {
@@ -554,10 +577,13 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		if (actor) {
 			if (collision == false)
 			{
-				
+				WasHit = false;
 				CollisionTreshold = GetActorLocation();
 				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				
+
 				collision = true;
+
 			}
 		}
 
@@ -591,6 +617,8 @@ void ABattleBumperPlayer::OnOverlapEnd2(class UPrimitiveComponent* OverlappedCom
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			collision = false;
+			//CollisionTreshold = FVector::ZeroVector;
+
 		}
 		CollidedActor2 = OtherActor;	
 		if (CollidedActor2->GetName() == "Wall") {
@@ -608,6 +636,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		if (actor) {
 			if (collision == false)
 			{
+				WasHit = false;
 
 				CollisionTreshold = GetActorLocation();
 				WorldCollision(SweepResult.ImpactNormal, GetActorRightVector(), -1);
@@ -642,6 +671,8 @@ void ABattleBumperPlayer::OnOverlapEnd3(class UPrimitiveComponent* OverlappedCom
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			collision = false;
+			//CollisionTreshold = FVector::ZeroVector;
+
 		}
 		CollidedActor2 = OtherActor;
 
@@ -660,7 +691,8 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		if (actor) {
 			if (collision == false)
 			{
-			
+				WasHit = false;
+
 				CollisionTreshold = GetActorLocation();
 				WorldCollision(SweepResult.ImpactNormal, GetActorRightVector(), 1);
 				collision = true;
@@ -696,8 +728,9 @@ float ABattleBumperPlayer::ReturnDamage() {
 
 void ABattleBumperPlayer::WorldCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght)
 {
-	CollsionVectorWorld = NImpactNormal + NForwardVector * NImpactStrenght;
-	ImpactStrenght = NImpactStrenght;
+	CollsionVectorWorld = NForwardVector * NImpactStrenght;
+	impactVector = NForwardVector * NImpactStrenght;
+	//ImpactStrenght = NImpactStrenght;
 	HitWorld = true;
 	GetWorld()->GetTimerManager().SetTimer(DelayTimerWorld, this, &ABattleBumperPlayer::CollisionWorldFalse, 1.0f, false);
 }
@@ -717,6 +750,8 @@ void ABattleBumperPlayer::OnOverlapEnd4(class UPrimitiveComponent* OverlappedCom
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			collision = false;
+			//CollisionTreshold = FVector::ZeroVector;
+
 		}
 		if (CollidedActor2->GetName() == "Wall") {
 			collisionright = false;
