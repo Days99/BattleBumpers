@@ -361,22 +361,6 @@ void AMyCharacter::StopGrowing()
 void AMyCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
-	//collision = true;
-	if (OtherActor && (OtherActor != this) && OtherComp)
-	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
-
-		if (CollidedActor->GetName() == "Wall") {
-			collision = true;
-		}
-
-		//}
-	}
 }
 
 
@@ -384,44 +368,18 @@ void AMyCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, cla
 void AMyCharacter::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 
-	if (OtherActor && (OtherActor != this) && OtherComp)
-	{
-		CollidedActor2 = OtherActor;
-		if (CollidedActor2->GetName() == "Wall") {
-			collision = false;
-		}
-	}
+
 }
 
 void AMyCharacter::OnOverlapBegin2(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	//collision = true;
-	if (OtherActor && (OtherActor != this) && OtherComp)
-	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
 
-		if (CollidedActor->GetName() == "Wall") {
-			collision = true;
-		}
-	}
 }
 
 void AMyCharacter::OnOverlapEnd2(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 
-	if (OtherActor && (OtherActor != this) && OtherComp)
-	{
-		CollidedActor2 = OtherActor;
 
-		if (CollidedActor2->GetName() == "Wall") {
-			collision = true;
-		}
-	}
 }
 
 void AMyCharacter::OnOverlapBegin3(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -429,16 +387,7 @@ void AMyCharacter::OnOverlapBegin3(class UPrimitiveComponent* OverlappedComp, cl
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
 
-		if (CollidedActor->GetName() == "Wall") {
-			collisionleft = true;
-		}
 	}
 }
 
@@ -447,11 +396,7 @@ void AMyCharacter::OnOverlapEnd3(class UPrimitiveComponent* OverlappedComp, clas
 
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor2 = OtherActor;
 
-		if (CollidedActor2->GetName() == "Wall") {
-			collisionleft = false;
-		}
 	}
 }
 
@@ -460,16 +405,8 @@ void AMyCharacter::OnOverlapBegin4(class UPrimitiveComponent* OverlappedComp, cl
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
-
-		if (CollidedActor->GetName() == "Wall") {
-			collisionright = true;
-		}
+	
+	
 	}
 }
 
@@ -482,11 +419,7 @@ void AMyCharacter::OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, clas
 
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor2 = OtherActor;
-
-		if (CollidedActor2->GetName() == "Wall") {
-			collisionright = false;
-		}
+		
 	}
 }
 

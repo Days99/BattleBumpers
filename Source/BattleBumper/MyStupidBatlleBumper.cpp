@@ -373,16 +373,7 @@ void AMyStupidBatlleBumper::OnOverlapBegin(class UPrimitiveComponent* Overlapped
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
-
-		if (CollidedActor->GetName() == "Wall") {
-			collision = true;
-		}
+		
 
 		//}
 	}
@@ -395,10 +386,7 @@ void AMyStupidBatlleBumper::OnOverlapEnd(class UPrimitiveComponent* OverlappedCo
 
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor2 = OtherActor;
-		if (CollidedActor2->GetName() == "Wall") {
-			collision = false;
-		}
+	
 	}
 }
 
@@ -407,16 +395,7 @@ void AMyStupidBatlleBumper::OnOverlapBegin2(class UPrimitiveComponent* Overlappe
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
-
-		if (CollidedActor->GetName() == "Wall") {
-			collision = true;
-		}
+	
 	}
 }
 
@@ -425,11 +404,7 @@ void AMyStupidBatlleBumper::OnOverlapEnd2(class UPrimitiveComponent* OverlappedC
 
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor2 = OtherActor;
-
-		if (CollidedActor2->GetName() == "Wall") {
-			collision = true;
-		}
+		
 	}
 }
 
@@ -438,16 +413,7 @@ void AMyStupidBatlleBumper::OnOverlapBegin3(class UPrimitiveComponent* Overlappe
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
 
-		if (CollidedActor->GetName() == "Wall") {
-			collisionleft = true;
-		}
 	}
 }
 
@@ -456,11 +422,7 @@ void AMyStupidBatlleBumper::OnOverlapEnd3(class UPrimitiveComponent* OverlappedC
 
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor2 = OtherActor;
 
-		if (CollidedActor2->GetName() == "Wall") {
-			collisionleft = false;
-		}
 	}
 }
 
@@ -469,16 +431,7 @@ void AMyStupidBatlleBumper::OnOverlapBegin4(class UPrimitiveComponent* Overlappe
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor = OtherActor;
-		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
 
-		if (CollidedActor->GetName() == "Wall") {
-			collisionright = true;
-		}
 	}
 }
 
@@ -488,14 +441,9 @@ float AMyStupidBatlleBumper::ReturnVelocity() {
 
 void AMyStupidBatlleBumper::OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		CollidedActor2 = OtherActor;
-
-		if (CollidedActor2->GetName() == "Wall") {
-			collisionright = false;
-		}
+		
 	}
 }
 
