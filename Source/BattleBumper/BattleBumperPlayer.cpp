@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Actor.h"
+#include "Kismet/GameplayStatics.h"
 #include "math.h"
 #include "GroundActor.h"
 #include "DeathZoneActor.h"
@@ -98,7 +99,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	//DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
+	DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
 }
 
 // Called when the game starts or when spawned
@@ -192,22 +193,22 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	else {
 		maxVelocityY = oMaxVelocityY;
 	}
-	if (!uHandbrake && !respawning)
+	if (!onHandbrake && !respawning)
 		CurrentVelocity.X += CurrentAcceleration.X;
 	
-	if (uHandbrake && CurrentVelocity.X > 0) {
+	if (onHandbrake && CurrentVelocity.X > 0) {
 		if (CurrentVelocity.X < HandbrakeAccelaration) {
 			CurrentVelocity.X = 0;
 		}
 		else
 		CurrentVelocity.X += HandbrakeAccelaration;
 	}
-	else if (uHandbrake && CurrentVelocity.X < 0) {
+	else if (onHandbrake && CurrentVelocity.X < 0) {
 		if (CurrentVelocity.X > HandbrakeAccelaration) {
 			CurrentVelocity.X = 0;
 		}
 		else
-		CurrentVelocity.X -= HandbrakeAccelaration;
+		CurrentVelocity.X += HandbrakeAccelaration;
 	}
 
 	if (CurrentAcceleration.Y == 0) {
@@ -226,20 +227,20 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		CurrentVelocity.X = maxVelocityRX;
 	}
 	
-	if(CurrentRotation.Yaw > maxVelocityY && CurrentAcceleration.Y > 0 && !uHandbrake)
+	if(CurrentRotation.Yaw > maxVelocityY && CurrentAcceleration.Y > 0 && !onHandbrake )
 	{
 		CurrentRotation.Yaw = maxVelocityY;
 	}
-	else if (uHandbrake && CurrentRotation.Yaw > maxVelocityY * 4) {
-		CurrentRotation.Yaw = maxVelocityY * 4;
+	else if (onHandbrake && CurrentRotation.Yaw > maxVelocityY * 4) {
+		CurrentRotation.Yaw = maxVelocityY * 1.5f;
 	}
 	
-	if (CurrentRotation.Yaw < -maxVelocityY && CurrentAcceleration.Y < 0 && !uHandbrake)
+	if (CurrentRotation.Yaw < -maxVelocityY && CurrentAcceleration.Y < 0 && !onHandbrake)
 	{
 		CurrentRotation.Yaw = -maxVelocityY;
 	}
-	else if (uHandbrake && CurrentRotation.Yaw < -maxVelocityY * 4) {
-		CurrentRotation.Yaw = -maxVelocityY * 4;
+	else if (!onHandbrake && CurrentRotation.Yaw < -maxVelocityY * 4) {
+		CurrentRotation.Yaw = -maxVelocityY * 1.5f;
 	}
 	if (boosted && CurrentVelocity.X < maxVelocityX) {
 		boosted = false;
@@ -259,10 +260,15 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			PreviousLocation = NewLocation;
 		//	CollisionTreshold = NewLocation;
 		if (!respawning) {
+			if (onHandbrake) {
+				NewLocation += GetActorForwardVector() * (1000 * (ServerVelocity.X/maxVelocityX)) * DeltaTime;
+			}
+			else
 			NewLocation += GetActorForwardVector() * ServerVelocity.X * DeltaTime;
 
 			if (Grounded > 0) {
 				CalculateSlopeRotation();
+
 				float difference;
 				if (NewRotation.Pitch < GroundRotation.Pitch) {
 					NewRotation.Pitch += (100 + GroundedRotationValue * 3) * DeltaTime;
@@ -278,13 +284,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			else if (NewRotation.Pitch > -20 && Grounded == 0)
 				NewRotation.Pitch -= (30 + (10 * ServerVelocity.X / maxVelocityX)) * DeltaTime;
 
-			if (uHandbrake && !CurrentVelocity.IsZero()) {
-				HandbrakeNormal = FVector::DotProduct(GetActorForwardVector(), HandbrakeForward);
-				if (HandbrakeNormal < 0.1) {
-					HandbrakeNormal = 0.3;
-				}
-				NewLocation = NewLocation + (HandbrakeForward * (ServerVelocity.X / 40)) / HandbrakeNormal * DeltaTime;
-			}
 			if (Grounded <= 0) {
 				NewLocation = NewLocation + (GetActorUpVector() * -350) * DeltaTime;
 			}
@@ -318,6 +317,19 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				CurrentDamage += ImpactStrenght * DeltaTime;;
 				AddDamage = false;
 			}
+
+			if (onHandbrake && !CurrentVelocity.IsZero() && Grounded > 0) {
+				HandbrakeNormal = FVector::DotProduct(GetActorForwardVector(), HandbrakeForward);
+				if (HandbrakeNormal < 0)
+					HandbrakeNormal *= -1;
+
+			//	if (HandbrakeNormal < 0.30) {
+				if (HandbrakeNormal < 0.1) {
+
+					HandbrakeNormal = 0.35;
+				}
+				NewLocation += HandbrakeForward * (2000 * (CurrentVelocity.X/maxVelocityX)) * DeltaTime;
+			}
 			if (collision)
 			{
 				NewLocation = CollisionTreshold + CollsionVectorWorld*5;
@@ -332,28 +344,24 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			else if (HitWorld)
 			{
-			
-					WasHit = false;
-				
-				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;
-				
-
+				WasHit = false;			
+				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;	
 			}
-			//if (locationZ > 0) {
-			//	NewLocation.Z = GetActorLocation().Z + locationZ;
-			//	locationZ = 0;
-			//}
+			if (currentDistanceZ < DistanceZ && OnGround) {
+				NewLocation.Z = GetActorLocation().Z + locationZ;
+			}
+
 
 
 
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
-		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage);
+		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake);
 
 		FRotator newPitch = springArm->GetComponentRotation();
 		newPitch.Yaw += mouseInput.X;
 		newPitch.Roll = 0;
-		newPitch.Pitch = -20;
+		//newPitch.Pitch = newPitch.Pitch - 20;
 
 		springArm->SetWorldRotation(newPitch);
 
@@ -365,13 +373,13 @@ void ABattleBumperPlayer::CollisionFalse()
 	GetWorldTimerManager().ClearTimer(DelayTimer);
 }
 
-void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation, FRotator NewRotation, float v, float d)
+void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation,  FRotator NewRotation, float v, float d, bool handbrake)
 {
 	if(Role == ROLE_Authority)
-	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d);
+	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake);
 }
 
-bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d)
+bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake)
 {
 	return true;
 }
@@ -401,13 +409,14 @@ void ABattleBumperPlayer::BumperCollision(FVector NImpactNormal, FVector NForwar
 	}
 	
 }
-void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d)
+void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake)
 {
 	a->SetActorLocationAndRotation(NewLocation, NewRotation);
 	if(a->collision)
 		a->SetActorLocationAndRotation(a->CollisionTreshold, NewRotation);
 	a->ServerVelocity.X = v;
 	a->CurrentDamage = d;
+	a->onHandbrake = handbrake;
 	
 }
 // Called to bind functionality to input
@@ -431,16 +440,14 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 }
 
 void ABattleBumperPlayer::Handbrake() {
-	if (!uHandbrake) {
-		HandbrakeForward = GetActorForwardVector();
-		uHandbrake = true;
-	}
+	HandbrakeForward = GetActorForwardVector();
+	onHandbrake = true;
 
 	float direction = 1;
 	if (CurrentRotation.Yaw < 0)
 		direction *= -1;
 	if(CurrentAcceleration.X != 0)
-	CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 2;
+	CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 50;
 }
 
 void ABattleBumperPlayer::UseBoost() {
@@ -453,15 +460,16 @@ void ABattleBumperPlayer::UseBoost() {
 }
 
 void ABattleBumperPlayer::ReleaseHandbrake() {
-	uHandbrake = false;
+	onHandbrake = false;
 	if (CurrentRotation.Yaw < -maxVelocityY) {
 		CurrentRotation.Yaw = -maxVelocityY;
 	}
 	else if(CurrentRotation.Yaw > maxVelocityY)
 		CurrentRotation.Yaw = maxVelocityY;
 
-	if (HandbrakeNormal < 0.3) {
+	if (HandbrakeNormal < 0.35) {
 		CurrentVelocity.X += HandbrakeBoost;
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HandbrakeBoostEffect, GetActorTransform(), true);
 	}
 	if (CurrentVelocity.X > maxVelocityX)
 		boosted = true;
@@ -768,12 +776,10 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 		AGroundActor * actor = Cast<AGroundActor>(OtherActor);
 		if (actor) {
 			Grounded++;
-			//if(actor->type != 0)
-			currentDistanceZ = FVector::DistXY(GetActorLocation(), OverlappedComp->GetComponentLocation());
-			if (DistanceZ == 0.0f) {
-				DistanceZ = currentDistanceZ;
-			}
-			locationZ =  DistanceZ - currentDistanceZ;
+			if (actor->type == 1)
+				OnGround = true;
+
+			GroundPosition = OverlappedComp->GetComponentLocation();
 				//CurrentRotation.Roll = actor->GetActorRotation().Roll;		
 
 				FVector Rotation = FVector(actor->GetActorRotation().Roll , 0, actor->GetActorRotation().Pitch);
@@ -833,6 +839,9 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 
 		if (actor) {
 			//GroundRotation = nullptr;
+			if (actor->type == 1)
+				OnGround = false;
+
 			Grounded--;
 
 			//if (GetActorRotation().Pitch > 0 && Grounded == 0) {
@@ -845,6 +854,12 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 void ABattleBumperPlayer::CalculateSlopeRotation(){
 	GroundedNormal = FVector::DotProduct(GroundedForward, GetActorForwardVector());
 	GroundRotation.Pitch = GroundedRotationValue;
+	currentDistanceZ = GetActorLocation().Z - GroundPosition.Z;
+	if (DistanceZ == 0.0f) {
+		DistanceZ = 60;
+	}
+	if(OnGround)
+	locationZ = DistanceZ - currentDistanceZ;
 	if ((FVector::DotProduct(GroundedForward, GetActorForwardVector())) != 0)
 		GroundRotation.Pitch *= FVector::DotProduct(GroundedForward, GetActorForwardVector());
 }

@@ -56,6 +56,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float Timer;
+	UPROPERTY(EditAnywhere)
+		UParticleSystem * HandbrakeBoostEffect;
 
 	UPROPERTY(EditAnywhere)
 		float TimeCounter;
@@ -76,6 +78,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimerWorld;
+	UPROPERTY(EditAnywhere)
+	bool OnGround;
 
 	float previousGroundedNormal;
 
@@ -88,6 +92,10 @@ protected:
 
 	void Respawn();
 
+	FVector GroundPosition;
+
+
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -98,13 +106,13 @@ public:
 	AActor* MyOwner;
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d);
+	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d, bool handbrake);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d);
+		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake);
 
 	
 	// Called to bind functionality to input
@@ -211,7 +219,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	int boost;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	bool uHandbrake = false;
+	bool onHandbrake;
 	UFUNCTION()
 	void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	// declare overlap end function
