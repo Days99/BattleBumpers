@@ -248,7 +248,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentRotation.Yaw = maxVelocityY;
 	}
-	else if (onHandbrake && CurrentRotation.Yaw > maxVelocityY * 4) {
+	else if (onHandbrake && CurrentRotation.Yaw > maxVelocityY * 1.5f) {
 		CurrentRotation.Yaw = maxVelocityY * 1.5f;
 	}
 	
@@ -256,7 +256,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentRotation.Yaw = -maxVelocityY;
 	}
-	else if (!onHandbrake && CurrentRotation.Yaw < -maxVelocityY * 4) {
+	else if (onHandbrake && CurrentRotation.Yaw < -maxVelocityY * 1.5f) {
 		CurrentRotation.Yaw = -maxVelocityY * 1.5f;
 	}
 	if (boosted && CurrentVelocity.X < maxVelocityX) {
