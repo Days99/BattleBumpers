@@ -354,7 +354,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			else if (HitWorld)
 			{
-
 				WasHit = false;
 				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;
 			}
@@ -366,10 +365,12 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				NewLocation.Z = GetActorLocation().Z + locationZ;
 			}
 
-		}
-		//SetActorLocationAndRotation(NewLocation, NewRotation);
-		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake);
+		
 
+
+		}
+
+		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake);
 
 		FRotator newPitch = springArm->GetComponentRotation();
 		newPitch.Yaw += mouseInput.X;
