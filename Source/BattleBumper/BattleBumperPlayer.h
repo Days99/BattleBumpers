@@ -35,11 +35,19 @@ public:
 	UPROPERTY(EditAnywhere)
 		bool collisionright = false;
 
+	UPROPERTY(EditAnywhere)
+		bool ShieldCollision = false;
+
 	UPROPERTY(Replicated, EditAnywhere)
 		bool AddDamage = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVector;
+	UPROPERTY(Replicated, EditAnywhere)
+		FVector ShieldVector;
+
+	UPROPERTY(Replicated, EditAnywhere)
+		bool ShieldCollected;
 
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVectorWorld;
@@ -125,6 +133,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	void Handbrake();
 
+	void ShieldHit(FVector NImpactNormal);
 	void ReleaseHandbrake();
 	void StartGrowing();
 	void StopGrowing();
@@ -155,10 +164,12 @@ public:
 	float locationZ;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		FVector CollisionTreshold;
+	FVector CollisionTreshold;
 	
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* myMesh;
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* ShieldMesh;
 	//Input variables
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;
@@ -253,7 +264,11 @@ public:
 	UFUNCTION()
 		void OnOverlapEndGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+		void OnOverlapBeginShield(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION()
+		void OnOverlapEndShield(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 
 	UFUNCTION(BlueprintCallable)
@@ -277,6 +292,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
 	class UCapsuleComponent* GroundCapsule;
+
+	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
+	class USphereComponent* ShieldCapsule;
 
 
 };

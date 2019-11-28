@@ -17,6 +17,7 @@
 #include "DeathZoneActor.h"
 #include "WallActor.h"
 #include "TimerManager.h"
+#include "Components/SphereComponent.h"
 
 
 // Sets default values
@@ -35,34 +36,31 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// Create a camera and a visible object
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	myMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
+	ShieldMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SHIELDS"));
 	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
 	UStaticMesh * Asset = MeshAsset.Object;
 	myMesh->SetStaticMesh(Asset);
-
 	bReplicates = true;
 	SetReplicateMovement(true);
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
-	
-	//ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
 
-	
-	//OurCollider->SetSimulatePhysics(true);
-	//OurCollider->SetEnableGravity(true);
+	//ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
 
 	OurCollider->SetNotifyRigidBodyCollision(true);
 
 	RootComponent = OurCollider;
-	myMesh->AttachTo(RootComponent);
+	
 
 	//ServerMovement->AddToRoot();
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
 	
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
-	springArm->AttachTo(RootComponent);
+	springArm->SetupAttachment(RootComponent);
 	springArm->TargetArmLength = 450.0f;
 	
-
+	myMesh->SetupAttachment(RootComponent);
+	ShieldMesh->SetupAttachment(RootComponent);
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
 
 	GroundCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Ground Capsule"));
@@ -78,22 +76,29 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	
 	// declare trigger capsule
 	BackTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 2"));
-	BackTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	BackTriggerCapsule->InitCapsuleSize(55.f, 96.0f);
 	BackTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 2"));
 	BackTriggerCapsule->SetupAttachment(RootComponent);
 
 	// declare trigger capsule
 	LeftTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 3"));
-	LeftTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	LeftTriggerCapsule->InitCapsuleSize(55.f, 96.0f);
 	LeftTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 3"));
 	LeftTriggerCapsule->SetupAttachment(RootComponent);
 
 	// declare trigger capsule
 	RightTriggerCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Trigger Capsule 4"));
-	RightTriggerCapsule->InitCapsuleSize(55.f, 96.0f);;
+	RightTriggerCapsule->InitCapsuleSize(55.f, 96.0f);
 	RightTriggerCapsule->SetCollisionProfileName(TEXT("Trigger 4"));
 	RightTriggerCapsule->SetupAttachment(RootComponent);
 
+	// declare trigger capsule
+	ShieldCapsule = CreateDefaultSubobject<USphereComponent>(TEXT("ShieldCapsule"));
+	ShieldCapsule->InitSphereRadius(55.0f);
+	ShieldCapsule->SetCollisionProfileName(TEXT("ShieldTrigger"));
+	ShieldCapsule->SetupAttachment(RootComponent);
+
+	ShieldMesh->SetVisibility(false);
 }
 
 void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
@@ -106,6 +111,8 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+	ShieldMesh->SetVisibility(false);
+	ShieldCollected = false;
 	oMaxVelocityY = maxVelocityY;
 	respawnTransform = GetActorTransform();
 	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
@@ -125,6 +132,9 @@ void ABattleBumperPlayer::BeginPlay()
 	GroundCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBeginGround);
 	GroundCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEndGround);
 
+	ShieldCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBeginShield);
+	ShieldCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEndShield);
+
 }
 
 // Called every frame
@@ -135,7 +145,14 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	// Handle growing and shrinking based on our "Grow" action
 
 
-
+	if(ShieldCollected==false)
+	{
+		ShieldMesh->SetVisibility(false);
+	}
+	else
+	{
+		ShieldMesh->SetVisibility(true);
+	}
 
 	if (collision == true)
 	{
@@ -293,17 +310,17 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				impactStrnght = (ImpactStrenght / 500) * (CurrentDamage / 2);
 				if (ImpactStrenght >= 2000 )
 				{
-					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage) *1.3f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage) / 2))) * DeltaTime;
+					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage) *1.3f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/1.3f))) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 50;
 				}
 				else if (ImpactStrenght >= 1500 )
 				{
-					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage) * 1.1f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage) / 3) )) * DeltaTime;
+					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage) * 1.1f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/2) )) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 55;
 				}
 				else if (ImpactStrenght >= 1000)
 				{
-					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage))) + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/4)) )* DeltaTime;
+					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage))) + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/1.5f)) )* DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 60;
 				}
 				else if (ImpactStrenght < 999)
@@ -332,31 +349,27 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			if (collision)
 			{
-				NewLocation = CollisionTreshold + CollsionVectorWorld*5;
+				NewLocation = CollisionTreshold + CollsionVectorWorld*2.5f;
 				NewLocation -= (CollisionTreshold + CollsionVectorWorld) * DeltaTime;
-				//CollisionTreshold += CollsionVectorWorld * 100;
-			
-					
-	/*			if (impactStrnght > 0) {
-					CollisionTreshold.X += -CollsionVector.X  * impactStrnght;
-				}
-*/
 			}
 			else if (HitWorld)
 			{
-				WasHit = false;			
-				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;	
+
+				WasHit = false;
+				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;
+			}
+			if(ShieldCollision)
+			{
+				NewLocation += ShieldVector;		
 			}
 			if (currentDistanceZ < DistanceZ && OnGround) {
 				NewLocation.Z = GetActorLocation().Z + locationZ;
 			}
 
-
-
-
 		}
 		//SetActorLocationAndRotation(NewLocation, NewRotation);
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake);
+
 
 		FRotator newPitch = springArm->GetComponentRotation();
 		newPitch.Yaw += mouseInput.X;
@@ -604,16 +617,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		}
 		CollidedActor2 = OtherActor;
 
-		if (CollidedActor2->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
-
-
-
-		if (CollidedActor2->GetName() == "Wall") {
-			collision = true;
-		}
+		
 	}
 }
 
@@ -660,13 +664,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		}
 		CollidedActor2 = OtherActor;
 		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor2->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
-		if (CollidedActor2->GetName() == "Wall") {
-			collisionleft = true;
-		}
+	
 	}
 }
 
@@ -715,14 +713,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		}
 		CollidedActor2 = OtherActor;
 		//if (CollidedActor->Tags.Num() > 0) {
-		if (CollidedActor2->GetActorLabel() == "Boost" && boost < 3) {
-			boost++;
-			OtherActor->Destroy();
-		}
-
-		if (CollidedActor2->GetName() == "Wall") {
-			collisionright = true;
-		}
+		
 	}
 }
 
@@ -830,6 +821,12 @@ void ABattleBumperPlayer::Respawn() {
 	respawning = false;
 }
 
+void ABattleBumperPlayer::ShieldHit(FVector NImpactNormal)
+{
+	ShieldVector = NImpactNormal - GetActorForwardVector()*5;
+	ShieldCollision = true;
+}
+
 void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 
@@ -848,6 +845,37 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 			//	GroundRotation.Pitch = -GetActorRotation().Pitch;
 			//}
 		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapBeginShield(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (ShieldCollected)
+	{
+		if (OtherActor && (OtherActor != this) && OtherComp)
+		{
+			ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
+			if (CollidedActors)
+			{
+				CurrentVelocity.X = 0;
+				CurrentAcceleration.X = 0;
+				WasHit = false;
+				ShieldHit(SweepResult.ImpactNormal);
+			}
+		}
+	}
+}
+
+void ABattleBumperPlayer::OnOverlapEndShield(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		
+
+
+		
 	}
 }
 
