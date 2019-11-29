@@ -18,6 +18,7 @@
 #include "WallActor.h"
 #include "TimerManager.h"
 #include "Components/SphereComponent.h"
+#include "ItemRandomizer.h"
 
 
 // Sets default values
@@ -98,21 +99,19 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	ShieldCapsule->SetCollisionProfileName(TEXT("ShieldTrigger"));
 	ShieldCapsule->SetupAttachment(RootComponent);
 
-	ShieldMesh->SetVisibility(false);
+
 }
 
 void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
+	//DOREPLIFETIME(ABattleBumperPlayer, ItemActivated);
 }
-
 // Called when the game starts or when spawned
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 	ShieldMesh->SetVisibility(false);
-	ShieldCollected = false;
 	oMaxVelocityY = maxVelocityY;
 	respawnTransform = GetActorTransform();
 	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
@@ -145,14 +144,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	// Handle growing and shrinking based on our "Grow" action
 
 
-	if(ShieldCollected==false)
-	{
-		ShieldMesh->SetVisibility(false);
-	}
-	else
-	{
-		ShieldMesh->SetVisibility(true);
-	}
+	
 
 	if (collision == true)
 	{
@@ -334,6 +326,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				CurrentDamage += ImpactStrenght * DeltaTime;;
 				AddDamage = false;
 			}
+			if(AddDamageShield)
+			{
+				CurrentDamage += YourVelocityShield * DeltaTime;;
+				AddDamageShield = false;
+			}
 
 			if (onHandbrake && !CurrentVelocity.IsZero() && Grounded > 0) {
 				HandbrakeNormal = FVector::DotProduct(GetActorForwardVector(), HandbrakeForward);
@@ -359,7 +356,12 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			if(ShieldCollision)
 			{
-				NewLocation += ShieldVector;		
+				if(YourVelocityShield > 1000)
+				NewLocation += ((ShieldVector*1.3f*(YourVelocityShield+CurrentDamage)) + (GetActorUpVector() * (YourVelocityShield + CurrentDamage) / 1.5f))*DeltaTime;
+				else
+				NewLocation += (ShieldVector * 2 * (YourVelocityShield + CurrentDamage)) * DeltaTime;
+				
+				CurrentAcceleration.X = 0;
 			}
 			if (currentDistanceZ < DistanceZ && OnGround) {
 				NewLocation.Z = GetActorLocation().Z + locationZ;
@@ -369,8 +371,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 		}
-
-		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake);
+		if (ShieldActivated)
+		{
+			ShieldMesh->SetVisibility(true);
+		}
+		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated);
 
 		FRotator newPitch = springArm->GetComponentRotation();
 		newPitch.Yaw += mouseInput.X;
@@ -378,7 +383,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		//newPitch.Pitch = newPitch.Pitch - 20;
 
 		springArm->SetWorldRotation(newPitch);
-
+		
 	
 }
 void ABattleBumperPlayer::CollisionFalse()
@@ -387,13 +392,13 @@ void ABattleBumperPlayer::CollisionFalse()
 	GetWorldTimerManager().ClearTimer(DelayTimer);
 }
 
-void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation,  FRotator NewRotation, float v, float d, bool handbrake)
+void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation,  FRotator NewRotation, float v, float d, bool handbrake, bool shield)
 {
 	if(Role == ROLE_Authority)
-	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake);
+	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake, shield);
 }
 
-bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake)
+bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
 {
 	return true;
 }
@@ -423,7 +428,7 @@ void ABattleBumperPlayer::BumperCollision(FVector NImpactNormal, FVector NForwar
 	}
 	
 }
-void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake)
+void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
 {
 	a->SetActorLocationAndRotation(NewLocation, NewRotation);
 	if(a->collision)
@@ -431,6 +436,8 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 	a->ServerVelocity.X = v;
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
+	a->ShieldActivated = shield;
+	
 	
 }
 // Called to bind functionality to input
@@ -450,6 +457,7 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	InputComponent->BindAction("Handbrake", IE_Pressed,  this, &ABattleBumperPlayer::Handbrake);
 	InputComponent->BindAction("Handbrake", IE_Released, this, &ABattleBumperPlayer::ReleaseHandbrake);
 	InputComponent->BindAction("Boost", IE_Pressed, this, &ABattleBumperPlayer::UseBoost);
+	InputComponent->BindAction("Item", IE_Pressed, this, &ABattleBumperPlayer::ActivateItem);
 
 }
 
@@ -471,6 +479,32 @@ void ABattleBumperPlayer::UseBoost() {
 		if (CurrentVelocity.X > maxVelocityX)
 			boosted = true;
 	}
+}
+
+void ABattleBumperPlayer::DestroyShield()
+{
+	ShieldActivated = false;
+	ShieldMesh->SetVisibility(false);
+	GetWorldTimerManager().ClearTimer(ShieldTime);
+
+}
+
+void ABattleBumperPlayer::ActivateItem()
+{
+	
+	if(ShieldCollection==true)
+	{
+		ActivateShield();
+		ShieldCollection = false;
+	}
+
+	
+}
+
+void ABattleBumperPlayer::ShieldTimer()
+{
+	ShieldCollision = false;
+	GetWorldTimerManager().ClearTimer(DelayTimer);
 }
 
 void ABattleBumperPlayer::ReleaseHandbrake() {
@@ -535,6 +569,10 @@ void ABattleBumperPlayer::StopGrowing()
 {
 	bGrowing = false;
 }
+void ABattleBumperPlayer::ActivateShield()
+{
+	ShieldActivated = true;
+}
 
 void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -543,6 +581,15 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		//collision = true; 
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
+
+		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
+		bool blah = Item->PlayerCollided;
+		if (Item && (Item->PlayerCollided == false)) {
+			
+			ShieldCollection = true;
+			Item->PlayerCollided = true;
+			Item->TimerFunc();
+		}
 		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
@@ -551,14 +598,14 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 				WasHit = false;
 				CollisionTreshold = GetActorLocation();
 				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), -1);
-				
-
 				collision = true;
 			}
 		}
+
+		
 		
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors)
+		if (CollidedActors && CollidedActors->ShieldActivated == false)
 		{
 			float v = ServerVelocity.X;
 			
@@ -577,7 +624,7 @@ void ABattleBumperPlayer::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp
 	
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-
+	
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			collision = false;
@@ -595,6 +642,14 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
+		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
+		bool blah = Item->PlayerCollided;
+		if (Item && (Item->PlayerCollided == false)) {
+			ShieldCollection = true;
+			Item->PlayerCollided = true;
+			Item->TimerFunc();
+		}
+		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			if (collision == false)
@@ -610,7 +665,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		}
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors)
+		if (CollidedActors && CollidedActors->ShieldActivated == false)
 		{
 			float v = ServerVelocity.X;
 			CollidedActors->BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), v);
@@ -642,9 +697,17 @@ void ABattleBumperPlayer::OnOverlapEnd2(class UPrimitiveComponent* OverlappedCom
 
 void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
+		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
+		bool blah = Item->PlayerCollided;
+		if (Item && (Item->PlayerCollided == false)) {
+			ShieldCollection = true;
+			Item->PlayerCollided = true;
+			Item->TimerFunc();
+		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			if (collision == false)
@@ -657,7 +720,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 			}
 		}
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors)
+		if (CollidedActors && CollidedActors->ShieldActivated == false)
 		{
 			float v = ServerVelocity.X;
 			CollidedActors->BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), v);
@@ -694,6 +757,13 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 	//collision = true;
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
+		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
+		bool blah = Item->PlayerCollided;
+		if (Item && (Item->PlayerCollided == false)) {
+			ShieldCollection = true;
+			Item->PlayerCollided = true;
+			Item->TimerFunc();
+		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			if (collision == false)
@@ -706,7 +776,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 			}
 		}
 				ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors)
+		if (CollidedActors && CollidedActors->ShieldActivated == false)
 		{
 			float v = ServerVelocity.X;
 			CollidedActors->BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), v);
@@ -824,8 +894,15 @@ void ABattleBumperPlayer::Respawn() {
 
 void ABattleBumperPlayer::ShieldHit(FVector NImpactNormal)
 {
-	ShieldVector = NImpactNormal - GetActorForwardVector()*5;
+	if(CurrentVelocity.X >= 0)
+	ShieldVector = NImpactNormal*5 - GetActorForwardVector();
+	else if(CurrentVelocity.X < 0)
+	ShieldVector = NImpactNormal * 5 + GetActorForwardVector() * 10;
+	YourVelocityShield = CurrentVelocity.X;
+	CurrentVelocity.X = 0;
+	AddDamageShield = true;
 	ShieldCollision = true;
+	GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &ABattleBumperPlayer::ShieldTimer, 1.0f, false);
 }
 
 void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -852,19 +929,24 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 void ABattleBumperPlayer::OnOverlapBeginShield(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (ShieldCollected)
+	if (ShieldActivated == true)
 	{
 		if (OtherActor && (OtherActor != this) && OtherComp)
 		{
 			ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
 			if (CollidedActors)
 			{
-				CurrentVelocity.X = 0;
-				CurrentAcceleration.X = 0;
+				//CollidedActors->CurrentVelocity.X = 0;
+				CollidedActors->CurrentAcceleration.X = 0;
 				WasHit = false;
-				ShieldHit(SweepResult.ImpactNormal);
+				CollidedActors->ShieldHit(SweepResult.ImpactNormal);
+				
+				
+				GetWorld()->GetTimerManager().SetTimer(ShieldTime, this, &ABattleBumperPlayer::DestroyShield, 2.0f, false);
+				ShieldActivated = false;
 			}
 		}
+		//ShieldCollected = false;
 	}
 }
 
