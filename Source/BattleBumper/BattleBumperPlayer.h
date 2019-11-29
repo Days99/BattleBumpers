@@ -23,6 +23,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		bool collision = false;
 
+	UPROPERTY(Replicated, EditAnywhere)
+		bool ShieldCollection = false;
+
 	UPROPERTY(replicated, EditAnywhere)
 		bool WasHit = false;
 
@@ -40,17 +43,22 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		bool ShieldCollision = false;
+	UPROPERTY(EditAnywhere)
+		bool ShieldActivated = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
 		bool AddDamage = false;
+	UPROPERTY(Replicated, EditAnywhere)
+		bool AddDamageShield = false;
+	UPROPERTY(EditAnywhere)
+		bool ItemActivated = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVector;
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector ShieldVector;
 
-	UPROPERTY(Replicated, EditAnywhere)
-		bool ShieldCollected;
+	
 
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVectorWorld;
@@ -122,13 +130,13 @@ public:
 	UWorld* World;
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d, bool handbrake);
+	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d, bool handbrake, bool shield);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake);
+		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield);
 
 	
 	// Called to bind functionality to input
@@ -146,6 +154,10 @@ public:
 	void StartGrowing();
 	void StopGrowing();
 	void UseBoost();
+	void DestroyShield();
+	void ActivateItem();
+	void ActivateShield();
+	void ShieldTimer();
 	void CollisionFalse();
 	void CollisionWorldFalse();
 	void WorldCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
@@ -188,6 +200,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxVelocityRX = -250;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		float YourVelocityShield;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxAccelaration = 5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxVelocityY = 30;
@@ -221,6 +235,8 @@ public:
 		FTransform respawnTransform;
 	bool respawning;
 	FTimerHandle respawningTime;
+	FTimerHandle ShieldTime;
+	FTimerHandle ShieldTimeForce;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector GroundedForward;
