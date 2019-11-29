@@ -45,6 +45,9 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	SetReplicateMovement(true);
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
 
+	if (Role == ROLE_Authority)
+		World = GetWorld();
+
 	//ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
 
 	OurCollider->SetNotifyRigidBodyCollision(true);
@@ -105,6 +108,8 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
+	DOREPLIFETIME(ABattleBumperPlayer, HandbrakeEffect);
+
 }
 
 // Called when the game starts or when spawned
@@ -114,6 +119,7 @@ void ABattleBumperPlayer::BeginPlay()
 	ShieldMesh->SetVisibility(false);
 	ShieldCollected = false;
 	oMaxVelocityY = maxVelocityY;
+	oMaxAccelaration = maxAccelaration;
 	respawnTransform = GetActorTransform();
 	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
 	FrontTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd);
@@ -283,6 +289,8 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			else
 			NewLocation += GetActorForwardVector() * ServerVelocity.X * DeltaTime;
 
+
+
 			if (Grounded > 0) {
 				CalculateSlopeRotation();
 
@@ -340,12 +348,14 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				if (HandbrakeNormal < 0)
 					HandbrakeNormal *= -1;
 
-			//	if (HandbrakeNormal < 0.30) {
+				if (HandbrakeNormal < 0.30) {
+					UGameplayStatics::SpawnEmitterAtLocation(World, HandbrakeEffect, CurrentPosition);
+				}
 				if (HandbrakeNormal < 0.1) {
 
-					HandbrakeNormal = 0.35;
+					HandbrakeNormal = 0.30;
 				}
-				NewLocation += HandbrakeForward * (2000 * (CurrentVelocity.X/maxVelocityX)) * DeltaTime;
+				NewLocation += (HandbrakeForward * (2500 * ((CurrentVelocity.X/maxVelocityX)))) * DeltaTime;
 			}
 			if (collision)
 			{
@@ -363,6 +373,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			if (currentDistanceZ < DistanceZ && OnGround) {
 				NewLocation.Z = GetActorLocation().Z + locationZ;
+				NewRotation.Pitch = 0;
 			}
 
 		
@@ -377,9 +388,15 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		newPitch.Roll = 0;
 		//newPitch.Pitch = newPitch.Pitch - 20;
 
+		ArrowAngle = (CurrentVelocity.X / maxVelocityX * 85) - 50;
+
 		springArm->SetWorldRotation(newPitch);
 
 	
+}
+
+float ABattleBumperPlayer::ReturnVelocityRotation() {
+	return ArrowAngle;
 }
 void ABattleBumperPlayer::CollisionFalse()
 {
@@ -431,6 +448,7 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 	a->ServerVelocity.X = v;
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
+	a->CurrentPosition = a->GetActorLocation();
 	
 }
 // Called to bind functionality to input
@@ -454,14 +472,16 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 }
 
 void ABattleBumperPlayer::Handbrake() {
-	HandbrakeForward = GetActorForwardVector();
-	onHandbrake = true;
+	if (Grounded > 0) {
+		HandbrakeForward = GetActorForwardVector();
+		onHandbrake = true;
 
-	float direction = 1;
-	if (CurrentRotation.Yaw < 0)
-		direction *= -1;
-	if(CurrentAcceleration.X != 0)
-	CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 50;
+		float direction = 1;
+		if (CurrentRotation.Yaw < 0)
+			direction *= -1;
+		if (CurrentAcceleration.X != 0)
+			CurrentRotation.Yaw += FMath::Clamp(direction, -1.0f, 1.0f) * maxVelocityY / 50;
+	}
 }
 
 void ABattleBumperPlayer::UseBoost() {
@@ -481,9 +501,8 @@ void ABattleBumperPlayer::ReleaseHandbrake() {
 	else if(CurrentRotation.Yaw > maxVelocityY)
 		CurrentRotation.Yaw = maxVelocityY;
 
-	if (HandbrakeNormal < 0.35) {
+	if (HandbrakeNormal < 0.3) {
 		CurrentVelocity.X += HandbrakeBoost;
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HandbrakeBoostEffect, GetActorTransform(), true);
 	}
 	if (CurrentVelocity.X > maxVelocityX)
 		boosted = true;
@@ -493,8 +512,16 @@ void ABattleBumperPlayer::ReleaseHandbrake() {
 void ABattleBumperPlayer::Move_XAxis(float AxisValue)
 {
 	// Move at 100 units per second forward or backward
+
+
 	if(!boosted)
 	CurrentAcceleration.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxAccelaration;
+
+	if (CurrentAcceleration.X < 0 && maxAccelaration < oMaxAccelaration * 2)
+		maxAccelaration = oMaxAccelaration * 2;
+	if (maxAccelaration > oMaxAccelaration && CurrentAcceleration.X > 0)
+			maxAccelaration = oMaxAccelaration;
+	
 	if (CurrentAcceleration.X > maxAccelaration) {
 		CurrentAcceleration.X = maxAccelaration;
 	}
@@ -885,7 +912,7 @@ void ABattleBumperPlayer::CalculateSlopeRotation(){
 	GroundRotation.Pitch = GroundedRotationValue;
 	currentDistanceZ = GetActorLocation().Z - GroundPosition.Z;
 	if (DistanceZ == 0.0f) {
-		DistanceZ = 60;
+		DistanceZ = 70;
 	}
 	if(OnGround)
 	locationZ = DistanceZ - currentDistanceZ;

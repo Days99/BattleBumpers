@@ -26,6 +26,9 @@ public:
 	UPROPERTY(replicated, EditAnywhere)
 		bool WasHit = false;
 
+	UPROPERTY(EditAnywhere)
+		float ArrowAngle;
+
 	UPROPERTY(replicated, EditAnywhere)
 		bool HitWorld = false;
 
@@ -64,8 +67,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		float Timer;
-	UPROPERTY(EditAnywhere)
-		UParticleSystem * HandbrakeBoostEffect;
+	UPROPERTY(Replicated, EditAnywhere)
+		UParticleSystem * HandbrakeEffect;
+	UPROPERTY(Replicated, EditAnywhere)
+		FVector CurrentPosition;
 
 	UPROPERTY(EditAnywhere)
 		float TimeCounter;
@@ -102,6 +107,7 @@ protected:
 
 	FVector GroundPosition;
 
+	float oMaxAccelaration;
 
 
 public:	
@@ -112,6 +118,8 @@ public:
 
 	UPROPERTY(replicated)
 	AActor* MyOwner;
+
+	UWorld* World;
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d, bool handbrake);
@@ -273,6 +281,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		float ReturnVelocity();
+
+
+	UFUNCTION(BlueprintCallable)
+		float ReturnVelocityRotation();
 
 	UFUNCTION(BlueprintCallable)
 		float ReturnDamage();
