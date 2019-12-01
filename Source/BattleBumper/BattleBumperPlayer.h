@@ -117,6 +117,9 @@ protected:
 
 	float oMaxAccelaration;
 
+	float CameraPitch;
+
+	float CameraYaw;
 
 public:	
 	// Called every frame
@@ -217,7 +220,7 @@ public:
 	FRotator CurrentRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector HandbrakeForward;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float HandbrakeNormal;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float HandbrakeAccelaration = -3.5;

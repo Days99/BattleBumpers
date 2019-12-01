@@ -61,7 +61,10 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
 	springArm->SetupAttachment(RootComponent);
-	springArm->TargetArmLength = 450.0f;
+	springArm->TargetArmLength = 450.0;
+
+
+
 	
 	myMesh->SetupAttachment(RootComponent);
 	ShieldMesh->SetupAttachment(RootComponent);
@@ -119,6 +122,10 @@ void ABattleBumperPlayer::BeginPlay()
 	oMaxVelocityY = maxVelocityY;
 	oMaxAccelaration = maxAccelaration;
 	respawnTransform = GetActorTransform();
+
+	FRotator OriginalCameraRotation = FRotator(-20, 0, 0);
+	springArm->AddRelativeRotation(OriginalCameraRotation);
+
 	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
 	FrontTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd);
 
@@ -287,11 +294,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 				float difference;
 				if (NewRotation.Pitch < GroundRotation.Pitch) {
-					NewRotation.Pitch += (100 + GroundedRotationValue * 3) * DeltaTime;
+					NewRotation.Pitch += (100 + GroundedRotationValue * 5) * DeltaTime;
 					difference = GroundRotation.Pitch - NewRotation.Pitch;
 				}
 				else if (NewRotation.Pitch > GroundRotation.Pitch) {
-					NewRotation.Pitch -= (100 + GroundedRotationValue * 3) * DeltaTime;
+					NewRotation.Pitch -= (100 + GroundedRotationValue * 5) * DeltaTime;
 					difference = NewRotation.Pitch - GroundRotation.Pitch;
 				}
 				if (difference < 1)
@@ -345,7 +352,12 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 					HandbrakeNormal *= -1;
 
 				if (HandbrakeNormal < 0.30) {
-					UGameplayStatics::SpawnEmitterAtLocation(World, HandbrakeEffect, CurrentPosition);
+					FVector EffectPosition = GetActorLocation() + FVector(0, 0, -50);
+					FVector EffectPosition2 = GetActorLocation() + FVector(0, 80, -50);
+
+					UGameplayStatics::SpawnEmitterAtLocation(World, HandbrakeEffect, EffectPosition);
+					UGameplayStatics::SpawnEmitterAtLocation(World, HandbrakeEffect, EffectPosition2);
+
 				}
 				if (HandbrakeNormal < 0.1) {
 
@@ -381,6 +393,8 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 
 		}
+		if (respawning)
+			CurrentDamage = 0;
 		if (ShieldActivated)
 		{
 			ShieldMesh->SetVisibility(true);
@@ -389,7 +403,33 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 		FRotator newPitch = springArm->GetComponentRotation();
 		newPitch.Yaw += mouseInput.X;
+		CameraYaw += mouseInput.X;
+		if (CameraYaw > 0 && mouseInput.X == 0)
+		{
+			newPitch.Yaw -= 1;
+			CameraYaw -= 1;
+		}
+		if (CameraYaw < 0 && mouseInput.X == 0)
+		{
+			newPitch.Yaw += 1;
+			CameraYaw += 1;
+		}
+		newPitch.Pitch += mouseInput.Y;
+		CameraPitch += mouseInput.Y;
+		if (CameraPitch > 0 && mouseInput.Y == 0)
+		{
+			newPitch.Pitch -= 1;
+			CameraPitch -= 1;
+		}
+		if (CameraPitch < 0 && mouseInput.Y == 0)
+		{
+			newPitch.Pitch += 1;
+			CameraPitch += 1;
+		}
+
 		newPitch.Roll = 0;
+		//if (mouseInput.X == 0)
+		//	newPitch.Yaw = oCameraPitch;
 		//newPitch.Pitch = newPitch.Pitch - 20;
 
 		ArrowAngle = (CurrentVelocity.X / maxVelocityX * 85) - 50;
@@ -478,8 +518,8 @@ void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 }
 
 void ABattleBumperPlayer::Handbrake() {
+	HandbrakeForward = GetActorForwardVector();
 	if (Grounded > 0) {
-		HandbrakeForward = GetActorForwardVector();
 		onHandbrake = true;
 
 		float direction = 1;
@@ -533,7 +573,7 @@ void ABattleBumperPlayer::ReleaseHandbrake() {
 	else if(CurrentRotation.Yaw > maxVelocityY)
 		CurrentRotation.Yaw = maxVelocityY;
 
-	if (HandbrakeNormal < 0.3) {
+	if (HandbrakeNormal < 0.3 && HandbrakeNormal != 0) {
 		CurrentVelocity.X += HandbrakeBoost;
 	}
 	if (CurrentVelocity.X > maxVelocityX)
@@ -906,7 +946,6 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 			SetActorTransform(respawnTransform);
 			respawning = true;
 			CurrentVelocity.X = 0;
-			CurrentDamage = 0;
 			Lives -= 1;
 			GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn,	4.0f, false);
 		}
