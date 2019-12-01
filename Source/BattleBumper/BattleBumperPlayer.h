@@ -63,7 +63,12 @@ public:
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVectorWorld;
 	UPROPERTY(EditAnywhere)
-		FVector ForwardWall;
+		FVector ColisionDirection;
+
+	UPROPERTY(EditAnywhere)
+		FHitResult HitoResulto;
+
+	
 	FVector PreviousLocation;
 
 
@@ -96,6 +101,13 @@ public:
 	float offset;
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
+
+	UPROPERTY(EditAnywhere)
+		FTimerHandle ShieldCollisionTimer;
+
+	FVector WallPosition;
+
+	int timeCollied;
 
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimerWorld;
