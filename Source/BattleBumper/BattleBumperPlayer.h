@@ -95,6 +95,11 @@ public:
 	UPROPERTY(EditAnywhere)
 		int Lives;
 	float oMaxVelocityY;
+	UPROPERTY(Replicated)
+	FVector SNewLocation;
+	UPROPERTY(Replicated)
+	FRotator SNewRotation;
+
 
 	FVector impactVector;
 
@@ -153,7 +158,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield);
 
-	
+	UFUNCTION(Client, Reliable)
+		void Client_Reliable(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield);
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	UPROPERTY(EditAnywhere)
@@ -228,7 +235,7 @@ public:
 	float dragZ = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentAcceleration;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FRotator CurrentRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector HandbrakeForward;

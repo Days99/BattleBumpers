@@ -16,6 +16,7 @@ AItemRandomizer::AItemRandomizer()
 	//ItemCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("SHIELDS"));
 	SpherekMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SPHEREMESHO"));
 	RootComponent = SpherekMesh;
+	Rotator.Yaw = 1;
 	//ItemCollider->SetupAttachment(RootComponent);
 	QuestionMarkMesh->SetupAttachment(RootComponent);
 }
@@ -37,8 +38,7 @@ void AItemRandomizer::Tick(float DeltaTime)
 		QuestionMarkMesh->SetVisibility(false, false);
 		SpherekMesh->SetVisibility(false, false);
 	}
-	Rotator.Yaw += 1;
-	QuestionMarkMesh->SetRelativeRotation(Rotator);
+	QuestionMarkMesh->AddRelativeRotation(Rotator);
 }
 
 void AItemRandomizer::Respawn()

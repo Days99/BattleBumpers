@@ -19,6 +19,7 @@
 #include "TimerManager.h"
 #include "Components/SphereComponent.h"
 #include "ItemRandomizer.h"
+#include "BoostActor.h"
 
 
 // Sets default values
@@ -63,6 +64,8 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	springArm->SetupAttachment(RootComponent);
 	springArm->TargetArmLength = 450.0;
 
+	if (Role != ROLE_Authority)
+		Role = ROLE_AutonomousProxy;
 
 
 	
@@ -276,6 +279,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	//{
 
 		FRotator NewRotation = GetActorRotation() + (CurrentRotation * DeltaTime);
+
 		FVector NewLocation = GetActorLocation();
 		if (!WasHit)
 			PreviousLocation = NewLocation;
@@ -395,7 +399,10 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		{
 			ShieldMesh->SetVisibility(true);
 		}
+
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated);
+		if (ROLE_AutonomousProxy)
+			SetActorLocationAndRotation(NewLocation, NewRotation);
 
 		FRotator newPitch = springArm->GetComponentRotation();
 		newPitch.Yaw += mouseInput.X;
@@ -446,9 +453,19 @@ void ABattleBumperPlayer::CollisionFalse()
 
 void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation,  FRotator NewRotation, float v, float d, bool handbrake, bool shield)
 {
-	if(Role == ROLE_Authority)
-	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake, shield);
+	if (Role == ROLE_Authority)
+		Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake, shield);
+	
+	if(Role == ROLE_AutonomousProxy)
+		Client_Reliable(a, NewLocation, NewRotation, v, d, handbrake, shield);
 }
+
+void ABattleBumperPlayer::Client_Reliable_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
+{
+	a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+}
+
+
 
 bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
 {
@@ -482,15 +499,12 @@ void ABattleBumperPlayer::BumperCollision(FVector NImpactNormal, FVector NForwar
 }
 void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
 {
-	FHitResult* blaubling = new FHitResult;
-	a->SetActorLocationAndRotation(NewLocation, NewRotation, true, blaubling);
-	HitoResulto.ImpactNormal = blaubling->ImpactNormal;
 	a->ServerVelocity.X = v;
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
 	a->CurrentPosition = a->GetActorLocation();
 	a->ShieldActivated = shield;
-	
+	a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
 }
 // Called to bind functionality to input
 void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -665,6 +679,15 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 			}
 		}
 
+		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
+
+		if (boostActor) {
+			if (boostActor->active) {
+				boost++;
+				boostActor->OnCollided();
+			}
+		}
+
 		
 		
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
@@ -729,6 +752,18 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 			}
 		}
 
+		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
+
+		if (boostActor) {
+			if (boostActor->active) {
+				boost++;
+				boostActor->OnCollided();
+			}
+		}
+
+
+
+
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
 		if (CollidedActors && CollidedActors->ShieldActivated == false)
 		{
@@ -787,6 +822,18 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 				collision = true;
 			}
 		}
+		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
+
+		if (boostActor) {
+			if (boostActor->active) {
+				boost++;
+				boostActor->OnCollided();
+			}
+		}
+
+
+
+
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
 		if (CollidedActors && CollidedActors->ShieldActivated == false)
 		{
@@ -846,7 +893,18 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 				collision = true;
 			}
 		}
-				ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
+		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
+
+		if (boostActor) {
+			if (boostActor->active) {
+				boost++;
+				boostActor->OnCollided();
+			}
+		}
+
+
+
+		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
 		if (CollidedActors && CollidedActors->ShieldActivated == false)
 		{
 			float v = ServerVelocity.X;
