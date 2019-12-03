@@ -136,8 +136,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	UPROPERTY(EditAnywhere, replicated)
-	UBoxComponent* OurCollider;
+	
 
 	UPROPERTY(replicated)
 	AActor* MyOwner;
@@ -200,8 +199,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CollisionTreshold;
+	UFUNCTION()
+		void OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* myMesh;
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* ShieldMesh;
@@ -338,6 +339,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
 	class USphereComponent* ShieldCapsule;
+
+	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule", replicated)
+	class UBoxComponent* OurCollider;
 
 
 };
