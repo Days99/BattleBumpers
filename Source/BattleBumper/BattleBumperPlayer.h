@@ -57,6 +57,10 @@ public:
 		FVector CollsionVector;
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector ShieldVector;
+	UPROPERTY(Replicated, EditAnywhere)
+		FVector NewLocation;
+	UPROPERTY(Replicated, EditAnywhere)
+		FRotator NewRotation;
 
 	
 
@@ -151,13 +155,13 @@ public:
 	bool positionSet;
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d, bool handbrake, bool shield);
+	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector FNewLocation, FRotator FNewRotation, float Velocity, float d, bool handbrake, bool shield);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
+	void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield);
+	void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector FNewLocation, FRotator FNewRotation, float v, float d, bool handbrake, bool shield);
 
 	void UpdateClients(ABattleBumperPlayer* a);
 	// Called to bind functionality to input

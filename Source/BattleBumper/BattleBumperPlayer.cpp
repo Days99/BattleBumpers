@@ -383,14 +383,14 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 					HandbrakeNormal = 0.30;
 				}
-				NewLocation += (HandbrakeForward * (2500 * ((CurrentVelocity.X / maxVelocityX)))) * DeltaTime;
+				NewLocation += (HandbrakeForward * (2500 * (CurrentVelocity.X / maxVelocityX))) * DeltaTime;
 			}
 			if(ShieldCollision)
 			{
 				if(YourVelocityShield > 1000)
 				NewLocation += ((ShieldVector*1.3f*(YourVelocityShield+CurrentDamage)) + (GetActorUpVector() * (YourVelocityShield + CurrentDamage) / 1.5f))*DeltaTime;
 				else
-				NewLocation += (ShieldVector * 2 * (YourVelocityShield + CurrentDamage)) * DeltaTime;
+				NewLocation += (ShieldVector*2*(YourVelocityShield + CurrentDamage)) * DeltaTime;
 				
 				CurrentAcceleration.X = 0;
 			}
@@ -814,9 +814,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 				CollisionTreshold = GetActorLocation();
 				WallPosition = actor->GetActorLocation();
 				//WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
-				
-
-				// collision = true;
+			
 
 			}
 		}
