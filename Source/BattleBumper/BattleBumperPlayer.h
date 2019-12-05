@@ -141,13 +141,14 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	UPROPERTY(EditAnywhere, replicated)
-	UBoxComponent* OurCollider;
+	
 
 	UPROPERTY(replicated)
 	AActor* MyOwner;
 
 	UWorld* World;
+
+	bool positionSet;
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d, bool handbrake, bool shield);
@@ -158,9 +159,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield);
 
-	UFUNCTION(Client, Reliable)
-		void Client_Reliable(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield);
-
+	void UpdateClients(ABattleBumperPlayer* a);
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	UPROPERTY(EditAnywhere)
@@ -207,8 +206,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CollisionTreshold;
+	UFUNCTION()
+		void OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* myMesh;
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* ShieldMesh;
@@ -259,6 +260,7 @@ public:
 	FTimerHandle respawningTime;
 	FTimerHandle ShieldTime;
 	FTimerHandle ShieldTimeForce;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector GroundedForward;
@@ -345,6 +347,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule")
 	class USphereComponent* ShieldCapsule;
+
+	UPROPERTY(VisibleAnywhere, Category = "Trigger Capsule", replicated)
+	class UBoxComponent* OurCollider;
 
 
 };

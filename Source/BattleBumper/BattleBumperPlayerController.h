@@ -21,6 +21,10 @@ class BATTLEBUMPER_API ABattleBumperPlayerController : public APlayerController
 protected:
 	virtual void BeginPlay() override;
 
+public:
+	UFUNCTION(Server, Unreliable, WithValidation)
+		void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d, bool handbrake, bool shield);
+
 	ABattleBumperPlayer* pawn;
 	
 };

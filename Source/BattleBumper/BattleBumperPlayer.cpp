@@ -20,6 +20,7 @@
 #include "Components/SphereComponent.h"
 #include "ItemRandomizer.h"
 #include "BoostActor.h"
+#include "EngineUtils.h" 
 
 
 // Sets default values
@@ -32,7 +33,6 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	MyOwner = GetOwner();
 	respawnTransform = GetActorTransform();
 	Lives = 3;
-
 	// Create a dummy root component we can attach things to.
 	
 	// Create a camera and a visible object
@@ -66,6 +66,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 	if (Role != ROLE_Authority)
 		Role = ROLE_AutonomousProxy;
+	
 
 
 	
@@ -73,6 +74,8 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	ShieldMesh->SetupAttachment(RootComponent);
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
 
+	
+	
 	GroundCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Ground Capsule"));
 	GroundCapsule->SetupAttachment(RootComponent);
 
@@ -115,6 +118,9 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
+	DOREPLIFETIME(ABattleBumperPlayer, SNewLocation);
+	DOREPLIFETIME(ABattleBumperPlayer, SNewRotation);
+
 
 }
 // Called when the game starts or when spawned
@@ -125,6 +131,8 @@ void ABattleBumperPlayer::BeginPlay()
 	oMaxVelocityY = maxVelocityY;
 	oMaxAccelaration = maxAccelaration;
 	respawnTransform = GetActorTransform();
+	CurrentPosition = GetActorLocation();
+
 
 	FRotator OriginalCameraRotation = FRotator(-20, 0, 0);
 	springArm->AddRelativeRotation(OriginalCameraRotation);
@@ -149,6 +157,7 @@ void ABattleBumperPlayer::BeginPlay()
 	ShieldCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBeginShield);
 	ShieldCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEndShield);
 
+	OurCollider->OnComponentHit.AddDynamic(this, &ABattleBumperPlayer::OnCompHit);
 }
 
 // Called every frame
@@ -165,7 +174,8 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentVelocity.X = 0;
 		CurrentAcceleration.X = 0;
-		
+		WasHit = false;
+		collision = false;
 	}
 
 	if (collisionright == true)
@@ -286,7 +296,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		//	CollisionTreshold = NewLocation;
 		if (!respawning) {
 			if (onHandbrake) {
-				NewLocation += GetActorForwardVector() * (1000 * (ServerVelocity.X/maxVelocityX)) * DeltaTime;
+				NewLocation += GetActorForwardVector() * (1000 * (CurrentVelocity.X /maxVelocityX)) * DeltaTime;
 			}
 			else
 			NewLocation += GetActorForwardVector() * ServerVelocity.X * DeltaTime;
@@ -309,13 +319,13 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 					NewRotation.Pitch = GroundRotation.Pitch;
 			}
 			else if (NewRotation.Pitch > -20 && Grounded == 0)
-				NewRotation.Pitch -= (30 + (10 * ServerVelocity.X / maxVelocityX)) * DeltaTime;
+				NewRotation.Pitch -= (30 + (10 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
 
 			if (Grounded <= 0) {
 				NewLocation += (GetActorUpVector() * -350) * DeltaTime;
 			}
 			float impactStrnght = 0;
-			if (WasHit && collision == false)
+			if (WasHit&&collision==false)
 			{
 				impactStrnght = (ImpactStrenght / 500) * (CurrentDamage / 2);
 				if (ImpactStrenght >= 2000 )
@@ -388,10 +398,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				NewLocation.Z = GetActorLocation().Z + locationZ;
 				NewRotation.Pitch = 0;
 			}
-
-		
-
-
 		}
 		if (respawning)
 			CurrentDamage = 0;
@@ -399,10 +405,32 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		{
 			ShieldMesh->SetVisibility(true);
 		}
-
+		FVector PreviousLocation = GetActorLocation();
+		FVector ClientLocation;
+		FRotator ClientRotation;
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated);
-		if (ROLE_AutonomousProxy)
-			SetActorLocationAndRotation(NewLocation, NewRotation);
+		if (Role == ROLE_AutonomousProxy) {
+			SetActorLocationAndRotation(NewLocation, NewRotation, true);
+		}
+	
+
+		//if (Role == ROLE_AutonomousProxy) {
+		//	SetActorLocationAndRotation(NewLocation, NewRotation, true);
+		//}
+		//else if (this->Role == ROLE_Authority) {
+		//	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated);
+		//}
+		//
+		//if (this->Role == ROLE_AutonomousProxy) {
+		//	ClientLocation = GetActorLocation();
+		//	ClientRotation = GetActorRotation();
+		//	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(this, ClientLocation, ClientRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated);
+		//}
+	//		Move_ClientMulticast(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated);
+
+		//if (Role == ROLE_AutonomousProxy)
+		//	ClientMove();
+		//if(FVector::Dist(PreviousLocation, GetActorLocation()) > 1)
 
 		FRotator newPitch = springArm->GetComponentRotation();
 		newPitch.Yaw += mouseInput.X;
@@ -435,12 +463,13 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		//	newPitch.Yaw = oCameraPitch;
 		//newPitch.Pitch = newPitch.Pitch - 20;
 
-		ArrowAngle = (CurrentVelocity.X / maxVelocityX * 85) - 50;
+		ArrowAngle = (ServerVelocity.X / maxVelocityX * 85) - 50;
 
 		springArm->SetWorldRotation(newPitch);
 		
 	
 }
+
 
 float ABattleBumperPlayer::ReturnVelocityRotation() {
 	return ArrowAngle;
@@ -453,18 +482,16 @@ void ABattleBumperPlayer::CollisionFalse()
 
 void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation,  FRotator NewRotation, float v, float d, bool handbrake, bool shield)
 {
-	if (Role == ROLE_Authority)
-		Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake, shield);
-	
-	if(Role == ROLE_AutonomousProxy)
-		Client_Reliable(a, NewLocation, NewRotation, v, d, handbrake, shield);
+	if (Role == ROLE_Authority) {
+		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+	}
+	a->CurrentPosition = a->GetActorLocation();
+	a->ServerVelocity.X = v;
+	a->CurrentDamage = d;
+	a->onHandbrake = handbrake;
+	a->ShieldActivated = shield;
+	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake, shield);
 }
-
-void ABattleBumperPlayer::Client_Reliable_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
-{
-	a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
-}
-
 
 
 bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
@@ -490,21 +517,63 @@ bool ABattleBumperPlayer::Server_BumperCollision_Validate(FVector NImpactNormal,
 
 void ABattleBumperPlayer::BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght)
 {
-	
-	if (Role == ROLE_Authority)
-	{
-		Server_BumperCollision(NImpactNormal, NForwardVector, NImpactStrenght);
-	}
+	CollsionVector = -NImpactNormal + NForwardVector;
+	ImpactStrenght = NImpactStrenght;
+	WasHit = true;
+	AddDamage = true;
+	GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &ABattleBumperPlayer::CollisionFalse, 1.0f, false);
+	//Server_BumperCollision(NImpactNormal, NForwardVector, NImpactStrenght);
 	
 }
 void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
 {
-	a->ServerVelocity.X = v;
+	//if (Role == ROLE_AutonomousProxy) {
+	ABattleBumperPlayer* player = nullptr;
+	FVector L;
+	FRotator R;
+	if (Role == ROLE_Authority) {
+	//	a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+
+
+	}
+	if (Role == ROLE_AutonomousProxy) {
+
+		//if (a->SNewLocation != NewLocation || a->SNewRotation != NewRotation) {
+		//	return;
+		//}
+		//else
+		//{
+		//a->SetActorLocationAndRotation(a->CurrentPosition, R, true);
+		//}
+		if (this != a) {
+			a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+		}
+
+	}
+	else {
+		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+	}
+	//a->CurrentPosition = a->GetActorLocation();
+	a->ServerVelocity.X = a->CurrentVelocity.X;
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
-	a->CurrentPosition = a->GetActorLocation();
 	a->ShieldActivated = shield;
-	a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+
+	//}
+	//for (TActorIterator<APawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	//{
+	//	// Same as with the Object Iterator, access the subclass instance with the * or -> operators.
+	//	APawn* p = *ActorItr;
+	//	ABattleBumperPlayer* bumper = Cast<ABattleBumperPlayer>(p);
+	//	if (bumper == a && !a->IsLocallyControlled()) {
+	//		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+	//		a->CurrentPosition = a->GetActorLocation();
+	//		a->ServerVelocity.X = v;
+	//		a->CurrentDamage = d;
+	//		a->onHandbrake = handbrake;
+	//		a->ShieldActivated = shield;
+	//	}
+	//}
 }
 // Called to bind functionality to input
 void ABattleBumperPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -670,12 +739,12 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		if (actor) {
 			if (collision == false)
 			{
-				WasHit = false;
+				//WasHit = false;
 				CollisionTreshold = GetActorLocation();
 				WallPosition = actor->GetActorLocation();
 
-				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), -1);
-				collision = true;
+				//WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), -1);
+				//collision = true;
 			}
 		}
 
@@ -741,13 +810,13 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		if (actor) {
 			if (collision == false)
 			{
-				WasHit = false;
+				// WasHit = false;
 				CollisionTreshold = GetActorLocation();
 				WallPosition = actor->GetActorLocation();
-				WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				//WorldCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
 				
 
-				collision = true;
+				// collision = true;
 
 			}
 		}
@@ -814,12 +883,12 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		if (actor) {
 			if (collision == false)
 			{
-				WasHit = false;
+				//WasHit = false;
 				WallPosition = actor->GetActorLocation();
 
 				CollisionTreshold = GetActorLocation();
-				WorldCollision(SweepResult.ImpactNormal, GetActorRightVector(), -1);
-				collision = true;
+				//WorldCollision(SweepResult.ImpactNormal, GetActorRightVector(), -1);
+				//collision = true;
 			}
 		}
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
@@ -885,12 +954,12 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		if (actor) {
 			if (collision == false)
 			{
-				WasHit = false;
+				//WasHit = false;
 				WallPosition = actor->GetActorLocation();
 
 				CollisionTreshold = GetActorLocation();
-				WorldCollision(SweepResult.ImpactNormal, GetActorRightVector(), 1);
-				collision = true;
+				//WorldCollision(SweepResult.ImpactNormal, GetActorRightVector(), 1);
+				//collision = true;
 			}
 		}
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
@@ -927,7 +996,7 @@ float ABattleBumperPlayer::ReturnDamage() {
 
 void ABattleBumperPlayer::WorldCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght)
 {
-	CollsionVectorWorld = NForwardVector * NImpactStrenght;
+	CollsionVectorWorld = NImpactNormal * NImpactStrenght;
 	impactVector = NForwardVector * NImpactStrenght;
 	//ImpactStrenght = NImpactStrenght;
 	HitWorld = true;
@@ -1103,5 +1172,18 @@ void ABattleBumperPlayer::CalculateSlopeRotation(){
 	locationZ = DistanceZ - currentDistanceZ;
 	if ((FVector::DotProduct(GroundedForward, GetActorForwardVector())) != 0)
 		GroundRotation.Pitch *= FVector::DotProduct(GroundedForward, GetActorForwardVector());
+}
+
+void ABattleBumperPlayer::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	AWallActor* actor = Cast<AWallActor>(OtherActor);
+	if (actor) {
+			WallPosition = actor->GetActorLocation();
+
+			CollisionTreshold = GetActorLocation();
+			collision = true;
+			WorldCollision(Hit.ImpactNormal*1.5f, GetActorForwardVector(), 1);
+	}
 }
 
