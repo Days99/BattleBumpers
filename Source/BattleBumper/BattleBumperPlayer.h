@@ -57,10 +57,6 @@ public:
 		FVector CollsionVector;
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector ShieldVector;
-	UPROPERTY(Replicated, EditAnywhere)
-		FVector NewLocation;
-	UPROPERTY(Replicated, EditAnywhere)
-		FRotator NewRotation;
 
 	
 
