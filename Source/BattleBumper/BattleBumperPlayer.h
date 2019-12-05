@@ -138,13 +138,21 @@ protected:
 
 	float CameraYaw;
 
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
+	void Reset();
+	UPROPERTY(EditAnywhere)
+	int id;
+
+	FVector RespawnPosition;
 
 	UPROPERTY(replicated)
 	AActor* MyOwner;
+
+	class UMyGameInstance* gameInstance;
 
 	UWorld* World;
 

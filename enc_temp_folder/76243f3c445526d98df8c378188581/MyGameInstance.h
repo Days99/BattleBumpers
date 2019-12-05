@@ -18,13 +18,6 @@ class BATTLEBUMPER_API UMyGameInstance : public UGameInstance
 public:
 	int GenerateID(ABattleBumperPlayer* p);
 
-	int maxPlayers;
-
-	UFUNCTION(BlueprintCallable, Category = "Movement")
-	void SetMaxPlayers(int max);
-
-	void StartGame();
-
 	TArray<ABattleBumperPlayer*> players;
 	
 };

@@ -14,26 +14,9 @@ int UMyGameInstance::GenerateID(ABattleBumperPlayer* p)
 	}
 
 
-
-
 	if (count > players.Num()) {
 		players.Add(p);
 		return count;
 	}
 	return p->id;
 }
-
-void UMyGameInstance::StartGame() {
-	if (players.Num() == maxPlayers) {
-		for (ABattleBumperPlayer* p : players) {
-			p->Reset();
-		}
-	}
-}
-
-
-void UMyGameInstance::SetMaxPlayers(int max) {
-	maxPlayers = max;
-}
-
-
