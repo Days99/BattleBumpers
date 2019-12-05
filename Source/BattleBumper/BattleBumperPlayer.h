@@ -26,7 +26,7 @@ public:
 	UPROPERTY(Replicated, EditAnywhere)
 		bool ShieldCollection = false;
 
-	UPROPERTY(replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere)
 		bool WasHit = false;
 
 	UPROPERTY(EditAnywhere)
@@ -43,7 +43,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		bool ShieldCollision = false;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Replicated,EditAnywhere)
 		bool ShieldActivated = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
@@ -161,8 +161,17 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector FNewLocation, FRotator FNewRotation, float Velocity, float d, bool handbrake, bool shield);
 
+	UFUNCTION(Server, Reliable,WithValidation)
+	void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght,ABattleBumperPlayer* a);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Client_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght, ABattleBumperPlayer* a);
+
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
+		void ServerTo_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght, ABattleBumperPlayer* a);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void ClientTo_BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght, ABattleBumperPlayer* a);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Client_ReliableFunctionCallThatRunsOnOwningClientOnly(ABattleBumperPlayer* a, FVector FNewLocation, FRotator FNewRotation, float v, float d, bool handbrake, bool shield);
