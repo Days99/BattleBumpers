@@ -32,6 +32,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		float ArrowAngle;
 
+	UPROPERTY(Replicated,EditAnywhere)
+		float AuxImpact = 1;
+
 	UPROPERTY(replicated, EditAnywhere)
 		bool HitWorld = false;
 

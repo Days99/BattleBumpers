@@ -121,6 +121,7 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 	DOREPLIFETIME(ABattleBumperPlayer, SNewLocation);
 	DOREPLIFETIME(ABattleBumperPlayer, SNewRotation);
 	DOREPLIFETIME(ABattleBumperPlayer, CurrentVelocity);
+	DOREPLIFETIME(ABattleBumperPlayer, ServerVelocity);
 
 
 }
@@ -141,14 +142,12 @@ void ABattleBumperPlayer::BeginPlay()
 	FrontTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin);
 	FrontTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd);
 
-
 	BackTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin2);
 	BackTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd2);
 
 	LeftTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin3);
 	LeftTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd3);
 	
-
 	RightTriggerCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapBegin4);
 	RightTriggerCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEnd4);
 
@@ -167,10 +166,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// Handle growing and shrinking based on our "Grow" action
-
-
-	
-
 	if (collision == true)
 	{
 		CurrentVelocity.X = 0;
@@ -468,7 +463,8 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 		springArm->SetWorldRotation(newPitch);
 		
-	
+		if(CurrentVelocity.X != 0)
+		AuxImpact = CurrentVelocity.X;
 }
 
 
@@ -487,7 +483,7 @@ void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementa
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
 	}
 	a->CurrentPosition = a->GetActorLocation();
-	a->ServerVelocity.X = v;
+	a->CurrentVelocity.X = v;
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
 	a->ShieldActivated = shield;
@@ -510,6 +506,7 @@ void ABattleBumperPlayer::Server_BumperCollision_Implementation(FVector NImpactN
 {
 	a->CollsionVector = -NImpactNormal + NForwardVector;
 	a->ImpactStrenght = NImpactStrenght;
+
 	a->WasHit = true;
 	a->AddDamage = true;
 	a->GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &ABattleBumperPlayer::CollisionFalse, 1.0f, false);
@@ -788,9 +785,10 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), v, CollidedActors);
-			else
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), ServerVelocity.X, CollidedActors);
+			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
+		
+
+			
 		}
 	}
 
@@ -862,9 +860,9 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), v,CollidedActors);
-			else
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), ServerVelocity.X, CollidedActors);
+			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
+		
+			
 		}
 		CollidedActor2 = OtherActor;
 
@@ -934,9 +932,9 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), v,CollidedActors);
-			else
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), ServerVelocity.X, CollidedActors);
+			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
+		
+			
 		}
 		CollidedActor2 = OtherActor;
 		//if (CollidedActor->Tags.Num() > 0) {
@@ -1006,9 +1004,9 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		{
 			float v = CurrentVelocity.X;
 			if(Role==ROLE_Authority)
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), v,CollidedActors);
-			else
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), ServerVelocity.X, CollidedActors);
+			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
+		
+			
 		}
 		CollidedActor2 = OtherActor;
 		//if (CollidedActor->Tags.Num() > 0) {
