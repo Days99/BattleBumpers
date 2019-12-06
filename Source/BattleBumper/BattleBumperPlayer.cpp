@@ -484,12 +484,12 @@ void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementa
 	if (a == this)
 	{
 		a->CurrentVelocity.X = v;
-
-	//a->ServerVelocity.X = v;
+		a->ShieldActivated = shield;
+		//a->ServerVelocity.X = v;
 	}
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
-	a->ShieldActivated = shield;
+	
 	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake, shield);
 }
 
@@ -556,15 +556,18 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 	else {
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
 	}
+
+
 	//a->CurrentPosition = a->GetActorLocation();
 	if (a == this)
 	{
 		//a->CurrentVelocity.X = v;
 		a->ServerVelocity.X = v;
+		a->ShieldActivated = shield;
 	}
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
-	a->ShieldActivated = shield;
+	
 
 	//}
 	//for (TActorIterator<APawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -1132,8 +1135,12 @@ void ABattleBumperPlayer::ShieldHit(FVector NImpactNormal)
 	ShieldVector = NImpactNormal*5 - GetActorForwardVector();
 	else if(CurrentVelocity.X < 0)
 	ShieldVector = NImpactNormal * 5 + GetActorForwardVector() * 10;
+	if(ServerVelocity.X != 0)
+	YourVelocityShield = ServerVelocity.X;
+	if (ServerVelocity.X != 0)
 	YourVelocityShield = CurrentVelocity.X;
 	CurrentVelocity.X = 0;
+	ServerVelocity.X = 0;
 	AddDamageShield = true;
 	ShieldCollision = true;
 	GetWorld()->GetTimerManager().SetTimer(ShieldCollisionTimer, this, &ABattleBumperPlayer::ShieldTimer, 1.0f, false);
