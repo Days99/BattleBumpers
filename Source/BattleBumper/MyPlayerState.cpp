@@ -18,4 +18,6 @@ float AMyPlayerState::ReturnPlayerDamage(ABattleBumperPlayer* pawn) {
 int AMyPlayerState::ReturnPlayerLives(ABattleBumperPlayer* pawn) {
 	return pawn->Lives;
 }
-
+int AMyPlayerState::ReturnPlayerBoosts(ABattleBumperPlayer* pawn) {
+	return pawn->boost;
+}

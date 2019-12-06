@@ -42,9 +42,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	myMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	ShieldMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SHIELDS"));
 	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
-	UStaticMesh * Asset = MeshAsset.Object;
-	myMesh->SetStaticMesh(Asset);
+
 	bReplicates = true;
 	SetReplicateMovement(true);
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
@@ -52,7 +50,9 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	if (Role == ROLE_Authority)
 		World = GetWorld();
 
-
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
+	UStaticMesh* Asset = MeshAsset.Object;
+	myMesh->SetStaticMesh(Asset);
 
 
 	
@@ -148,6 +148,7 @@ void ABattleBumperPlayer::BeginPlay()
 			RespawnPosition = respawn->GetActorLocation();
 		}
 	}
+
 
 
 	ShieldMesh->SetVisibility(false);
@@ -827,7 +828,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
 
 		if (boostActor) {
-			if (boostActor->active) {
+			if (boostActor->active && boost < 3) {
 				boost++;
 				boostActor->OnCollided();
 			}
@@ -902,7 +903,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
 
 		if (boostActor) {
-			if (boostActor->active) {
+			if (boostActor->active && boost < 3) {
 				boost++;
 				boostActor->OnCollided();
 			}
@@ -975,7 +976,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
 
 		if (boostActor) {
-			if (boostActor->active) {
+			if (boostActor->active && boost < 3) {
 				boost++;
 				boostActor->OnCollided();
 			}
@@ -1050,7 +1051,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
 
 		if (boostActor) {
-			if (boostActor->active) {
+			if (boostActor->active && boost < 3) {
 				boost++;
 				boostActor->OnCollided();
 			}
@@ -1173,15 +1174,15 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 			ServerVelocity.X = 0;
 			Lives -= 1;
 			if (Lives == 0) {
-				if (controller) {
-					gameInstance->RemovePlayer(this);
-					controller->DisableInput(controller);
-					if (playerAssasin) {
-						controller->Possess(playerAssasin);
-					}
-					else
-						controller->Possess(gameInstance->GetRandomPlayer());
-				}
+				//if (controller) {
+				//	gameInstance->RemovePlayer(this);
+				//	controller->DisableInput(controller);
+				//	if (playerAssasin) {
+				//		controller->Possess(playerAssasin);
+				//	}
+				//	else
+				//		controller->Possess(gameInstance->GetRandomPlayer());
+				//}
 			}
 			else
 			GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn,	4.0f, false);
