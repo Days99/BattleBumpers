@@ -20,8 +20,9 @@
 #include "Components/SphereComponent.h"
 #include "ItemRandomizer.h"
 #include "BoostActor.h"
-#include "EngineUtils.h" 
-
+#include "EngineUtils.h"
+#include "MyGameInstance.h"
+#include "MyRespawnActor.h"
 
 // Sets default values
 ABattleBumperPlayer::ABattleBumperPlayer()
@@ -67,7 +68,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	if (Role != ROLE_Authority)
 		Role = ROLE_AutonomousProxy;
 	
-
+	
 
 	
 	myMesh->SetupAttachment(RootComponent);
@@ -127,6 +128,22 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+	id = gameInstance->GenerateID(this);
+
+	TSubclassOf<AMyRespawnActor> classToFind;
+	classToFind = AMyRespawnActor::StaticClass();
+	TArray<AActor*> foundObjects;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), classToFind, foundObjects);
+
+	for (AActor* a : foundObjects) {
+		AMyRespawnActor* respawn = Cast<AMyRespawnActor>(a);
+		if (respawn && respawn->id == id) {
+			RespawnPosition = respawn->GetActorLocation();
+		}
+	}
+
+
 	ShieldMesh->SetVisibility(false);
 	oMaxVelocityY = maxVelocityY;
 	oMaxAccelaration = maxAccelaration;
@@ -156,6 +173,8 @@ void ABattleBumperPlayer::BeginPlay()
 	ShieldCapsule->OnComponentEndOverlap.AddDynamic(this, &ABattleBumperPlayer::OnOverlapEndShield);
 
 	OurCollider->OnComponentHit.AddDynamic(this, &ABattleBumperPlayer::OnCompHit);
+	gameInstance->StartGame();
+
 }
 
 // Called every frame
@@ -195,16 +214,21 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		
 	}
 
-	if (CurrentVelocity.X >= dragX && CurrentAcceleration.X == 0)
-	{
-		CurrentAcceleration.X -= dragX;
+	if (CurrentAcceleration.X == 0) {
+		if (CurrentVelocity.X >= dragX)
+		{
+			CurrentAcceleration.X -= dragX;
+		}
+		if (CurrentVelocity.X <= -dragX)
+		{
+			CurrentAcceleration.X += dragX;
+		}
+		if (CurrentVelocity.X > -dragX && CurrentVelocity.X < dragX) {
+			CurrentVelocity.X = 0;
+		}
 	}
 	if (CurrentVelocity.X >= dragXBoost && boosted) {
 		CurrentAcceleration.X -= dragXBoost;
-	}
-	if (CurrentVelocity.X <= -dragX && CurrentAcceleration.X == 0)
-	{
-		CurrentAcceleration.X += dragX;
 	}
 	if (CurrentRotation.Yaw > dragZ && CurrentAcceleration.Y == 0)
 	{
@@ -289,11 +313,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			PreviousLocation = NewLocation;
 		//	CollisionTreshold = NewLocation;
 		if (!respawning) {
-			if (onHandbrake) {
+			if (onHandbrake && CurrentVelocity.X != 0) {
 				NewLocation += GetActorForwardVector() * (1000 * (CurrentVelocity.X /maxVelocityX)) * DeltaTime;
 			}
-			else
-			NewLocation += GetActorForwardVector() * ServerVelocity.X * DeltaTime;
+			else if(ServerVelocity.X != 0)
+			NewLocation += GetActorForwardVector() * CurrentVelocity.X * DeltaTime;
 
 
 
@@ -302,21 +326,21 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 				float difference;
 				if (NewRotation.Pitch < GroundRotation.Pitch) {
-					NewRotation.Pitch += (100 + GroundedRotationValue * 5) * DeltaTime;
+					NewRotation.Pitch += (100 + GroundedRotationValue * 10) * DeltaTime;
 					difference = GroundRotation.Pitch - NewRotation.Pitch;
 				}
 				else if (NewRotation.Pitch > GroundRotation.Pitch) {
-					NewRotation.Pitch -= (100 + GroundedRotationValue * 5) * DeltaTime;
+					NewRotation.Pitch -= (100 + GroundedRotationValue * 10) * DeltaTime;
 					difference = NewRotation.Pitch - GroundRotation.Pitch;
 				}
 				if (difference < 1)
 					NewRotation.Pitch = GroundRotation.Pitch;
 			}
 			else if (NewRotation.Pitch > -20 && Grounded == 0)
-				NewRotation.Pitch -= (30 + (10 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
+				NewRotation.Pitch -= (30 + (30 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
 
 			if (Grounded <= 0) {
-				NewLocation += (GetActorUpVector() * -350) * DeltaTime;
+				NewLocation += (GetActorUpVector() * -600) * DeltaTime;
 			}
 			float impactStrnght = 0;
 			if (WasHit&&collision==false)
@@ -465,6 +489,16 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		AuxImpact = CurrentVelocity.X;
 }
 
+void ABattleBumperPlayer::Reset()
+{
+	SetActorLocation(RespawnPosition);
+	Lives = 3;
+	CurrentDamage = 0;
+	CurrentVelocity.X = 0;
+	respawning = true;
+	GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn, 4.0f, false);
+}
+
 
 float ABattleBumperPlayer::ReturnVelocityRotation() {
 	return ArrowAngle;
@@ -555,6 +589,9 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 	}
 	else {
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+		a->ServerVelocity.X = a->CurrentVelocity.X;
+		a->CurrentDamage = d;
+		a->ShieldActivated = shield;
 	}
 
 
@@ -568,6 +605,7 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
 	
+
 
 	//}
 	//for (TActorIterator<APawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
@@ -698,6 +736,7 @@ void ABattleBumperPlayer::Move_XAxis(float AxisValue)
 
 	if(!boosted)
 	CurrentAcceleration.X = FMath::Clamp(AxisValue, -1.0f, 1.0f) * maxAccelaration;
+
 
 	if (CurrentAcceleration.X < 0 && maxAccelaration < oMaxAccelaration * 2)
 		maxAccelaration = oMaxAccelaration * 2;
@@ -1116,7 +1155,7 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 		ADeathZoneActor * deathactor = Cast<ADeathZoneActor>(OtherActor);
 
 		if (deathactor) {
-			SetActorTransform(respawnTransform);
+			SetActorLocation(RespawnPosition);
 			respawning = true;
 			CurrentVelocity.X = 0;
 			Lives -= 1;

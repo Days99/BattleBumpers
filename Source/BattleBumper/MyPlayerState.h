@@ -24,4 +24,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 		int ReturnPlayerLives(ABattleBumperPlayer* p);
+
+
 };
