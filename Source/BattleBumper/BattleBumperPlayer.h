@@ -205,6 +205,7 @@ public:
 	void ShieldTimer();
 	void CollisionFalse();
 	void CollisionWorldFalse();
+	void BeginShieldTimer();
 	void WorldCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 	void BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
