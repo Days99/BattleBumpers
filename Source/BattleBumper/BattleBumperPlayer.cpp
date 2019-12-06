@@ -432,9 +432,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		if (ShieldActivated)
 		{
 			ShieldMesh->SetVisibility(true);
+			ShieldCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		}
 		else
 		{
+			ShieldCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			ShieldMesh->SetVisibility(false);
 		}
 		FVector PreviousLocation = GetActorLocation();
@@ -822,7 +824,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			if (collision == false)
+			if (collision == false && CurrentVelocity.X != 0)
 			{
 				//WasHit = false;
 				CollisionTreshold = GetActorLocation();
@@ -847,15 +849,10 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
 		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false)
 		{
-
-
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
-			CollidedActors->playerAssasin = this;
-
-
-			
+			CollidedActors->playerAssasin = this;	
 		}
 	}
 
@@ -899,7 +896,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			if (collision == false)
+			if (collision == false && CurrentVelocity.X != 0)
 			{
 				// WasHit = false;
 				CollisionTreshold = GetActorLocation();
@@ -973,7 +970,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			if (collision == false)
+			if (collision == false && CurrentVelocity.X != 0)
 			{
 				//WasHit = false;
 				WallPosition = actor->GetActorLocation();
@@ -1048,7 +1045,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			if (collision == false)
+			if (collision == false && CurrentVelocity.X != 0)
 			{
 				//WasHit = false;
 				WallPosition = actor->GetActorLocation();
