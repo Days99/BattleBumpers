@@ -23,7 +23,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void SetMaxPlayers(int max);
 
+	void RemovePlayer(ABattleBumperPlayer * p);
+
 	void StartGame();
+
+	ABattleBumperPlayer* GetRandomPlayer();
+
+
 
 	TArray<ABattleBumperPlayer*> players;
 	

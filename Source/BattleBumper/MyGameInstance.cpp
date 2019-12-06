@@ -31,9 +31,22 @@ void UMyGameInstance::StartGame() {
 	}
 }
 
+ABattleBumperPlayer* UMyGameInstance::GetRandomPlayer()
+{
+	int i = rand() % players.Num();
+	return players[i];
+}
+
 
 void UMyGameInstance::SetMaxPlayers(int max) {
 	maxPlayers = max;
+}
+
+void UMyGameInstance::RemovePlayer(ABattleBumperPlayer* p)
+{
+	if (players.Contains(p)) {
+		players.Remove(p);
+	}
 }
 
 

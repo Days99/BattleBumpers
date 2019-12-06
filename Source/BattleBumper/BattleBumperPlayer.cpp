@@ -24,6 +24,7 @@
 #include "MyGameInstance.h"
 #include "MyRespawnActor.h"
 
+
 // Sets default values
 ABattleBumperPlayer::ABattleBumperPlayer()
 {
@@ -50,6 +51,11 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 
 	if (Role == ROLE_Authority)
 		World = GetWorld();
+
+
+
+
+	
 
 	//ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
 
@@ -149,6 +155,8 @@ void ABattleBumperPlayer::BeginPlay()
 	oMaxAccelaration = maxAccelaration;
 	respawnTransform = GetActorTransform();
 	CurrentPosition = GetActorLocation();
+	controller = Cast<APlayerController>(GetController());
+
 
 
 	FRotator OriginalCameraRotation = FRotator(-20, 0, 0);
@@ -495,6 +503,7 @@ void ABattleBumperPlayer::Reset()
 	Lives = 3;
 	CurrentDamage = 0;
 	CurrentVelocity.X = 0;
+	ServerVelocity.X = 0;
 	respawning = true;
 	GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn, 4.0f, false);
 }
@@ -832,7 +841,8 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
-		
+			CollidedActors->playerAssasin = this;
+
 
 			
 		}
@@ -907,7 +917,8 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
-		
+			CollidedActors->playerAssasin = this;
+
 			
 		}
 		CollidedActor2 = OtherActor;
@@ -977,8 +988,10 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		if (CollidedActors && CollidedActors->ShieldActivated == false)
 		{
 			float v = ServerVelocity.X;
-			if (Role == ROLE_Authority)
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
+			if (Role == ROLE_Authority) {
+				CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
+				CollidedActors->playerAssasin = this;
+			}
 		
 			
 		}
@@ -1051,6 +1064,8 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 			float v = CurrentVelocity.X;
 			if(Role==ROLE_Authority)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
+			CollidedActors->playerAssasin = this;
+
 		
 			
 		}
@@ -1155,7 +1170,20 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 			SetActorLocation(RespawnPosition);
 			respawning = true;
 			CurrentVelocity.X = 0;
+			ServerVelocity.X = 0;
 			Lives -= 1;
+			if (Lives == 0) {
+				if (controller) {
+					gameInstance->RemovePlayer(this);
+					controller->DisableInput(controller);
+					if (playerAssasin) {
+						controller->Possess(playerAssasin);
+					}
+					else
+						controller->Possess(gameInstance->GetRandomPlayer());
+				}
+			}
+			else
 			GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn,	4.0f, false);
 		}
 	}

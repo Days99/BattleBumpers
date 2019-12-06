@@ -152,6 +152,10 @@ public:
 
 	FVector RespawnPosition;
 
+	class APlayerController* controller;
+
+	ABattleBumperPlayer* playerAssasin;
+
 	UPROPERTY(replicated)
 	AActor* MyOwner;
 
