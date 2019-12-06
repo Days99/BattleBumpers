@@ -824,7 +824,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			if (collision == false && CurrentVelocity.X != 0)
+			if (collision == false)
 			{
 				//WasHit = false;
 				CollisionTreshold = GetActorLocation();
@@ -847,7 +847,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		
 		
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
@@ -896,7 +896,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			if (collision == false && CurrentVelocity.X != 0)
+			if (collision == false)
 			{
 				// WasHit = false;
 				CollisionTreshold = GetActorLocation();
@@ -920,7 +920,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
@@ -970,7 +970,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			if (collision == false && CurrentVelocity.X != 0)
+			if (collision == false)
 			{
 				//WasHit = false;
 				WallPosition = actor->GetActorLocation();
@@ -993,7 +993,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority) {
@@ -1045,7 +1045,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
-			if (collision == false && CurrentVelocity.X != 0)
+			if (collision == false)
 			{
 				//WasHit = false;
 				WallPosition = actor->GetActorLocation();
@@ -1067,7 +1067,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit==false)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit==false && CurrentVelocity.X != 0)
 		{
 			float v = CurrentVelocity.X;
 			if(Role==ROLE_Authority)
