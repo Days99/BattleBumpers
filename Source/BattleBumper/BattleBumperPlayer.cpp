@@ -121,8 +121,6 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 	DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
 	DOREPLIFETIME(ABattleBumperPlayer, SNewLocation);
 	DOREPLIFETIME(ABattleBumperPlayer, SNewRotation);
-	DOREPLIFETIME(ABattleBumperPlayer, CurrentVelocity);
-	DOREPLIFETIME(ABattleBumperPlayer, ServerVelocity);
 
 
 }
@@ -517,7 +515,12 @@ void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementa
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
 	}
 	a->CurrentPosition = a->GetActorLocation();
-	a->CurrentVelocity.X = v;
+	if (a == this)
+	{
+		a->CurrentVelocity.X = v;
+
+	//a->ServerVelocity.X = v;
+	}
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
 	a->ShieldActivated = shield;
@@ -590,7 +593,12 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 		a->CurrentDamage = d;
 		a->ShieldActivated = shield;
 	}
-	a->ServerVelocity.X = a->CurrentVelocity.X;
+	//a->CurrentPosition = a->GetActorLocation();
+	if (a == this)
+	{
+		//a->CurrentVelocity.X = v;
+		a->ServerVelocity.X = v;
+	}
 	a->CurrentDamage = d;
 	a->ShieldActivated = shield;
 	//a->CurrentPosition = a->GetActorLocation();
