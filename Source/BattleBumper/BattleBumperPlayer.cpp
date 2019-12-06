@@ -123,6 +123,7 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 	DOREPLIFETIME(ABattleBumperPlayer, SNewRotation);
 
 
+
 }
 // Called when the game starts or when spawned
 void ABattleBumperPlayer::BeginPlay()
@@ -423,6 +424,10 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		{
 			ShieldMesh->SetVisibility(true);
 		}
+		else
+		{
+			ShieldMesh->SetVisibility(false);
+		}
 		FVector PreviousLocation = GetActorLocation();
 		FVector ClientLocation;
 		FRotator ClientRotation;
@@ -513,14 +518,16 @@ void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementa
 {
 	if (Role == ROLE_Authority) {
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+
 	}
 	a->CurrentPosition = a->GetActorLocation();
 	if (a == this)
 	{
 		a->CurrentVelocity.X = v;
-		a->ShieldActivated = shield;
 		//a->ServerVelocity.X = v;
 	}
+
+	a->ShieldActivated = shield;
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
 	
@@ -584,24 +591,22 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 		//}
 		if (this != a) {
 			a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+			//a->ShieldActivated = shield;
 		}
 
 	}
 	else {
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
-		a->ServerVelocity.X = a->CurrentVelocity.X;
-		a->CurrentDamage = d;
 		a->ShieldActivated = shield;
 	}
-
-
 	//a->CurrentPosition = a->GetActorLocation();
 	if (a == this)
 	{
+		//a->ShieldActivated = shield;
 		//a->CurrentVelocity.X = v;
 		a->ServerVelocity.X = v;
-		a->ShieldActivated = shield;
 	}
+	
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
 	
@@ -689,8 +694,8 @@ void ABattleBumperPlayer::UseBoost() {
 
 void ABattleBumperPlayer::DestroyShield()
 {
-	ShieldActivated = false;
 	ShieldMesh->SetVisibility(false);
+	ShieldActivated = false;
 	GetWorldTimerManager().ClearTimer(ShieldTime);
 
 }
@@ -830,12 +835,13 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		
 		
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false)
 		{
+
+
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
-		
 
 			
 		}
@@ -905,7 +911,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false)
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
@@ -977,7 +983,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false)
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
@@ -1049,12 +1055,11 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit==false)
 		{
 			float v = CurrentVelocity.X;
 			if(Role==ROLE_Authority)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
-		
 			
 		}
 		CollidedActor2 = OtherActor;
@@ -1084,6 +1089,12 @@ void ABattleBumperPlayer::CollisionWorldFalse()
 {
 	HitWorld = false;
 	GetWorldTimerManager().ClearTimer(DelayTimerWorld);
+}
+
+void ABattleBumperPlayer::BeginShieldTimer()
+{
+	GetWorld()->GetTimerManager().SetTimer(ShieldTime, this, &ABattleBumperPlayer::DestroyShield, 2.0f, false);
+	//ShieldActivated = false;
 }
 
 void ABattleBumperPlayer::OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -1176,7 +1187,7 @@ void ABattleBumperPlayer::ShieldHit(FVector NImpactNormal)
 	ShieldVector = NImpactNormal * 5 + GetActorForwardVector() * 10;
 	if(ServerVelocity.X != 0)
 	YourVelocityShield = ServerVelocity.X;
-	if (ServerVelocity.X != 0)
+	if (CurrentVelocity.X != 0)
 	YourVelocityShield = CurrentVelocity.X;
 	CurrentVelocity.X = 0;
 	ServerVelocity.X = 0;
@@ -1217,13 +1228,13 @@ void ABattleBumperPlayer::OnOverlapBeginShield(UPrimitiveComponent* OverlappedCo
 			if (CollidedActors)
 			{
 				//CollidedActors->CurrentVelocity.X = 0;
-				CollidedActors->CurrentAcceleration.X = 0;
 				WasHit = false;
+				CollidedActors->CurrentAcceleration.X = 0;
+				BeginShieldTimer();
 				CollidedActors->ShieldHit(SweepResult.ImpactNormal);
 				
 				
-				GetWorld()->GetTimerManager().SetTimer(ShieldTime, this, &ABattleBumperPlayer::DestroyShield, 2.0f, false);
-				ShieldActivated = false;
+				//ShieldActivated = false;
 			}
 		}
 		//ShieldCollected = false;
