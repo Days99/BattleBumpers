@@ -197,7 +197,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	{
 		CurrentVelocity.X = 0;
 		CurrentAcceleration.X = 0;
-		WasHit = false;
+		//WasHit = false;
 		collision = false;
 	}
 
@@ -387,11 +387,14 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				CurrentDamage += YourVelocityShield * DeltaTime;;
 				AddDamageShield = false;
 			}
-
 			if (HitWorld)
 			{
-				WasHit = false;
+				if (WasHit)
+				{
+					NewLocation -= ((-CollsionVectorWorld * 500) + CollsionVector * ((ImpactStrenght + CurrentDamage)) + (-GetActorUpVector() * ((ImpactStrenght + CurrentDamage)))) * DeltaTime;
+				}
 				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;
+				
 			}
 
 			if (onHandbrake && !CurrentVelocity.IsZero() && Grounded > 0 && !collision) {
@@ -530,7 +533,6 @@ void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementa
 {
 	if (Role == ROLE_Authority) {
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
-
 	}
 	a->CurrentPosition = a->GetActorLocation();
 	if (a == this)
@@ -847,7 +849,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		
 		
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false && CurrentVelocity.X != 0)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
@@ -920,7 +922,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false && CurrentVelocity.X != 0)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority)
@@ -993,7 +995,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit == false && CurrentVelocity.X != 0)
+		if (CollidedActors && CollidedActors->ShieldActivated == false  && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority) {
@@ -1067,7 +1069,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 
 
 		ABattleBumperPlayer* CollidedActors = Cast<ABattleBumperPlayer>(OtherActor);
-		if (CollidedActors && CollidedActors->ShieldActivated == false && CollidedActors->WasHit==false && CurrentVelocity.X != 0)
+		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = CurrentVelocity.X;
 			if(Role==ROLE_Authority)
