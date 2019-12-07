@@ -28,7 +28,7 @@ void ABoostActor::OnCollided()
 {
 	active = false;
 	PillMesh->SetVisibility(false);
-	GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABoostActor::OnRespawn, 10.0f, false);
+	GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABoostActor::OnRespawn, 5.0f, false);
 
 }
 

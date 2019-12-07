@@ -849,7 +849,8 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
 
 		if (boostActor) {
-			if (boostActor->active && boost < 3) {
+			if (boostActor->active) {
+				if (boost < 3)
 				boost++;
 				boostActor->OnCollided();
 			}
@@ -921,7 +922,8 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
 
 		if (boostActor) {
-			if (boostActor->active && boost < 3) {
+			if (boostActor->active) {
+				if(boost < 3)
 				boost++;
 				boostActor->OnCollided();
 			}
@@ -994,7 +996,8 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
 
 		if (boostActor) {
-			if (boostActor->active && boost < 3) {
+			if (boostActor->active) {
+				if (boost < 3)
 				boost++;
 				boostActor->OnCollided();
 			}
@@ -1069,7 +1072,8 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		ABoostActor* boostActor = Cast<ABoostActor>(OtherActor);
 
 		if (boostActor) {
-			if (boostActor->active && boost < 3) {
+			if (boostActor->active) {
+				if (boost < 3)
 				boost++;
 				boostActor->OnCollided();
 			}
