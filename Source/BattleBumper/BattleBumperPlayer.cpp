@@ -819,7 +819,6 @@ void ABattleBumperPlayer::ActivateShield()
 
 void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-
 	//collision = true;
 		//collision = true; 
 	if (OtherActor && (OtherActor != this) && OtherComp)
