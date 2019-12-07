@@ -162,8 +162,9 @@ void ABattleBumperPlayer::BeginPlay()
 			RespawnPosition = respawn->GetActorLocation();
 		}
 	}
-
+	Reset();
 	gameInstance->StartGame();
+	
 	
 
 
