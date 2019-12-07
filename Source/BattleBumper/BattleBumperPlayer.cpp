@@ -1073,7 +1073,6 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 			if(Role==ROLE_Authority)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
 			CollidedActors->playerAssasin = this;
-
 		
 			
 		}
