@@ -400,7 +400,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			{
 				if (WasHit)
 				{
-					NewLocation -= ((-CollsionVectorWorld * 500) + CollsionVector * ((ImpactStrenght + CurrentDamage)) + (-GetActorUpVector() * ((ImpactStrenght + CurrentDamage)))) * DeltaTime;
+					NewLocation -= ((-CollsionVectorWorld * 500) + CollsionVector * ((ImpactStrenght + CurrentDamage)) + (-GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/3.0f))) * DeltaTime;
 				}
 				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;
 				
@@ -814,6 +814,7 @@ void ABattleBumperPlayer::StopGrowing()
 void ABattleBumperPlayer::ActivateShield()
 {
 	ShieldActivated = true;
+	GetWorld()->GetTimerManager().SetTimer(ShieldTime, this, &ABattleBumperPlayer::DestroyShield, 10.0f, false);
 }
 
 void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
