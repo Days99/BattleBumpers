@@ -60,6 +60,8 @@ public:
 	UPROPERTY(Replicated, EditAnywhere)
 		bool AddDamage = false;
 	UPROPERTY(Replicated, EditAnywhere)
+		bool AddDamageMine = false;
+	UPROPERTY(Replicated, EditAnywhere)
 		bool AddDamageShield = false;
 	UPROPERTY(EditAnywhere)
 		bool ItemActivated = false;
@@ -95,6 +97,7 @@ public:
 		float Timer;
 	UPROPERTY(Replicated, EditAnywhere)
 		UParticleSystem * HandbrakeEffect;
+
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CurrentPosition;
 
@@ -265,6 +268,8 @@ public:
 	UStaticMeshComponent* myMesh;
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* ShieldMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UStaticMeshComponent* BoostEffect;
 	//Input variables
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;

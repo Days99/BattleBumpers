@@ -43,6 +43,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	springArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	myMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	ShieldMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SHIELDS"));
+	BoostEffect = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BoostEffect"));
 	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
 
 	bReplicates = true;
@@ -74,6 +75,8 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
 	springArm->SetupAttachment(RootComponent);
+	BoostEffect->SetupAttachment(RootComponent);
+	
 	springArm->TargetArmLength = 450.0;
 
 	if (Role != ROLE_Authority)
@@ -141,6 +144,7 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	if (ROLE_Authority) {
 		gameInstance = Cast<UMyGameInstance>(GetGameInstance());
 		id = gameInstance->GenerateID(this);
@@ -169,6 +173,7 @@ void ABattleBumperPlayer::BeginPlay()
 
 
 	ShieldMesh->SetVisibility(false);
+	//BoostEffect->SetVisibility(false,true);
 	oMaxVelocityY = maxVelocityY;
 	oMaxAccelaration = maxAccelaration;
 	respawnTransform = GetActorTransform();
@@ -326,6 +331,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	}
 	if (boosted && CurrentVelocity.X < maxVelocityX) {
 		boosted = false;
+		BoostEffect->SetVisibility(false,true);
 	}
 
 
@@ -399,13 +405,21 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			if (AddDamage)
 			{
-				CurrentDamage += ImpactStrenght * DeltaTime;;
+				if(ImpactStrenght > 0)
+				CurrentDamage += ImpactStrenght * DeltaTime;
+				else
+				CurrentDamage -= ImpactStrenght * DeltaTime;
 				AddDamage = false;
 			}
 			if(AddDamageShield)
 			{
 				CurrentDamage += YourVelocityShield * DeltaTime;;
 				AddDamageShield = false;
+			}
+			if (AddDamageMine)
+			{
+				CurrentDamage += 5000 * DeltaTime;;
+				AddDamageMine = false;
 			}
 			if (HitWorld)
 			{
@@ -428,7 +442,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HandbrakeEffect, EffectPosition);
 					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HandbrakeEffect, EffectPosition2);
-
+					
 				}
 				if (HandbrakeNormal < 0.1) {
 
@@ -742,8 +756,10 @@ void ABattleBumperPlayer::UseBoost() {
 	if (boost > 0) {
 		CurrentVelocity.X += 500;
 		boost--;
-		if (CurrentVelocity.X > maxVelocityX)
+		if (CurrentVelocity.X > maxVelocityX) {
+			BoostEffect->SetVisibility(true);
 			boosted = true;
+		}
 	}
 }
 
@@ -1259,6 +1275,7 @@ void ABattleBumperPlayer::MineCollision(FVector NImpactNormal, FVector NForwardV
 {
 	MineVector = (NImpactNormal+NForwardVector) * NImpactStrenght;
 	MineCollisions = true;
+	AddDamageMine = true;
 	GetWorld()->GetTimerManager().SetTimer(DelayTimerMine, this, &ABattleBumperPlayer::MineFalse, 1.3f, false);
 }
 
