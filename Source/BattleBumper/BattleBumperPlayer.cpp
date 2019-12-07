@@ -400,7 +400,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			{
 				if (WasHit)
 				{
-					NewLocation -= ((-CollsionVectorWorld * 500) + CollsionVector * ((ImpactStrenght + CurrentDamage)) + (-GetActorUpVector() * ((ImpactStrenght + CurrentDamage)))) * DeltaTime;
+					NewLocation -= ((-CollsionVectorWorld * 500) + CollsionVector * ((ImpactStrenght + CurrentDamage)) + (-GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/3.0f))) * DeltaTime;
 				}
 				NewLocation += (CollsionVectorWorld * 500) * DeltaTime;
 				
