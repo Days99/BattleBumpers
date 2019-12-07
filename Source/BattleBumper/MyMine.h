@@ -14,6 +14,11 @@ class BATTLEBUMPER_API AMyMine : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AMyMine();
+	UPROPERTY(EditAnywhere)
+		FTimerHandle DelayTimer;
+
+	UPROPERTY(EditAnywhere)
+		bool MineActivated;
 
 protected:
 	// Called when the game starts or when spawned
@@ -22,5 +27,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	void ActivateMine();
 
 };

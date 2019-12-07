@@ -50,7 +50,7 @@ public:
 	UPROPERTY(EditAnywhere)
 		bool ShieldCollision = false;
 	UPROPERTY(EditAnywhere)
-		bool MineCollision = false;
+		bool MineCollisions = false;
 	UPROPERTY(Replicated,EditAnywhere)
 		bool ShieldActivated = false;
 	UPROPERTY(Replicated, EditAnywhere)
@@ -66,6 +66,8 @@ public:
 
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CollsionVector;
+	UPROPERTY(Replicated, EditAnywhere)
+		FVector MineVector;
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector ShieldVector;
 
@@ -117,6 +119,8 @@ public:
 	float offset;
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
+	UPROPERTY(EditAnywhere)
+		FTimerHandle DelayTimerMine;
 
 	UPROPERTY(EditAnywhere)
 		FTimerHandle ShieldCollisionTimer;
@@ -212,7 +216,12 @@ public:
 	void StartGrowing();
 	void StopGrowing();
 	void UseBoost();
-	void SpawnMine();
+	UFUNCTION(NetMulticast, Reliable)
+	void SpawnMine(ABattleBumperPlayer* a);
+	UFUNCTION(Server, Reliable,WithValidation)
+		void Server_SpawnMine(ABattleBumperPlayer* a);
+
+
 	void DestroyShield();
 	void ActivateItem();
 	void ActivateShield();
@@ -220,7 +229,9 @@ public:
 	void CollisionFalse();
 	void CollisionWorldFalse();
 	void BeginShieldTimer();
+	void MineFalse();
 	void WorldCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
+	void MineCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 	void BumperCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght);
 
 	void mouseYawn(float axis);
