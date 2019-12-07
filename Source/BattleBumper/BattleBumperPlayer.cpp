@@ -80,7 +80,6 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 		Role = ROLE_AutonomousProxy;
 	
 	
-
 	
 	myMesh->SetupAttachment(RootComponent);
 	ShieldMesh->SetupAttachment(RootComponent);
@@ -165,7 +164,6 @@ void ABattleBumperPlayer::BeginPlay()
 	}
 	Reset();
 	gameInstance->StartGame();
-	
 	
 
 
@@ -443,6 +441,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				NewLocation += (ShieldVector*2*(YourVelocityShield + CurrentDamage)) * DeltaTime;
 				
 				CurrentAcceleration.X = 0;
+			}
+			if (MineCollisions)
+			{
+				NewLocation += (((MineVector * (2500 + CurrentDamage) * 1.3f)) + (GetActorUpVector() * ((CurrentDamage+4000) / 1.3f))) * DeltaTime;
+				NewRotation.Yaw += MineVector.Rotation().Yaw / 50;
 			}
 			if (currentDistanceZ < DistanceZ && OnGround) {
 				NewLocation.Z = GetActorLocation().Z + locationZ;
@@ -739,23 +742,49 @@ void ABattleBumperPlayer::UseBoost() {
 	}
 }
 
-void ABattleBumperPlayer::SpawnMine()
+void ABattleBumperPlayer::SpawnMine_Implementation(ABattleBumperPlayer* a)
 {
-	if(ToSpawn)
+	if (ToSpawn)
 	{
-		UWorld* world = GetWorld();
+		UWorld* world = a->GetWorld();
 		if (world)
 		{
 			FActorSpawnParameters SpawParams;
-			SpawParams.Owner = this;
+			SpawParams.Owner = a;
 
 			FRotator rotator;
 
-			FVector spawnLocation = this->GetActorLocation();
+			FVector spawnLocation = a->GetActorLocation() - GetActorUpVector() * 150;
 
-			world->SpawnActor<AMyMine>(ToSpawn, spawnLocation, rotator,SpawParams);
+			world->SpawnActor<AMyMine>(ToSpawn, spawnLocation, rotator, SpawParams);
 		}
 	}
+}
+
+void ABattleBumperPlayer::Server_SpawnMine_Implementation(ABattleBumperPlayer* a)
+{
+		if (ToSpawn)
+		{
+			UWorld* world = a->GetWorld();
+			if (world)
+			{
+				FActorSpawnParameters SpawParams;
+				SpawParams.Owner = a;
+
+				FRotator rotator;
+
+				FVector spawnLocation = a->GetActorLocation() - GetActorUpVector() * 150;
+
+				world->SpawnActor<AMyMine>(ToSpawn, spawnLocation, rotator, SpawParams);
+			}
+		}
+		SpawnMine(a);
+	
+}
+
+bool ABattleBumperPlayer::Server_SpawnMine_Validate(ABattleBumperPlayer* a)
+{
+	return true;
 }
 
 void ABattleBumperPlayer::DestroyShield()
@@ -776,9 +805,10 @@ void ABattleBumperPlayer::ActivateItem()
 	}
 	if (MineCollection == true)
 	{
-		MineDroped = true;
+		Server_SpawnMine(this);
 		MineCollection = false;
 	}
+	
 
 	
 }
@@ -875,10 +905,23 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			
-			ShieldCollection = true;
+			int i = rand() % 2;
+			if (i == 1)
+				ShieldCollection = true;
+			else
+				MineCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
+		}
+
+		AMyMine* Mine = Cast<AMyMine>(OtherActor);
+		if (Mine && (Mine->MineActivated == true)) {
+			if (!ShieldActivated)
+			{
+				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				Mine->Destroy();
+			}
+			
 		}
 		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
@@ -949,11 +992,26 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			ShieldCollection = true;
+			int i = rand() % 2;
+			if (i == 1)
+				ShieldCollection = true;
+			else
+				MineCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
 		}
 		
+		AMyMine* Mine = Cast<AMyMine>(OtherActor);
+		if (Mine && (Mine->MineActivated == true)) {
+			if (!ShieldActivated)
+			{
+
+				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				Mine->Destroy();
+			}
+			
+		}
+
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
 			if (collision == false)
@@ -1025,9 +1083,24 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			ShieldCollection = true;
+			int i = rand() % 2;
+			if (i == 1)
+				ShieldCollection = true;
+			else
+				MineCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
+		}
+
+		AMyMine* Mine = Cast<AMyMine>(OtherActor);
+		if (Mine && (Mine->MineActivated == true)) {
+			if (!ShieldActivated)
+			{
+
+				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				Mine->Destroy();
+			}
+			
 		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
@@ -1101,9 +1174,23 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			ShieldCollection = true;
+			int i = rand() % 2;
+			if (i == 1)
+				ShieldCollection = true;
+			else
+				MineCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
+		}
+		AMyMine* Mine = Cast<AMyMine>(OtherActor);
+		if (Mine && (Mine->MineActivated == true)) {
+			if (!ShieldActivated)
+			{
+
+				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				Mine->Destroy();
+			}
+		
 		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
@@ -1163,6 +1250,13 @@ void ABattleBumperPlayer::WorldCollision(FVector NImpactNormal, FVector NForward
 	GetWorld()->GetTimerManager().SetTimer(DelayTimerWorld, this, &ABattleBumperPlayer::CollisionWorldFalse, 1.0f, false);
 }
 
+void ABattleBumperPlayer::MineCollision(FVector NImpactNormal, FVector NForwardVector, float NImpactStrenght)
+{
+	MineVector = (NImpactNormal+NForwardVector) * NImpactStrenght;
+	MineCollisions = true;
+	GetWorld()->GetTimerManager().SetTimer(DelayTimerMine, this, &ABattleBumperPlayer::MineFalse, 1.3f, false);
+}
+
 void ABattleBumperPlayer::CollisionWorldFalse()
 {
 	HitWorld = false;
@@ -1173,6 +1267,12 @@ void ABattleBumperPlayer::BeginShieldTimer()
 {
 	GetWorld()->GetTimerManager().SetTimer(ShieldTime, this, &ABattleBumperPlayer::DestroyShield, 2.0f, false);
 	//ShieldActivated = false;
+}
+
+void ABattleBumperPlayer::MineFalse()
+{
+	MineCollisions = false;
+	GetWorldTimerManager().ClearTimer(DelayTimerMine);
 }
 
 void ABattleBumperPlayer::OnOverlapEnd4(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -1326,6 +1426,16 @@ void ABattleBumperPlayer::OnOverlapBeginShield(UPrimitiveComponent* OverlappedCo
 				CollidedActors->ShieldHit(SweepResult.ImpactNormal);
 				
 				
+				//ShieldActivated = false;
+			}
+
+			AMyMine* CollidedMines = Cast<AMyMine>(OtherActor);
+			if (CollidedMines && CollidedMines->MineActivated)
+			{
+				GetWorld()->GetTimerManager().SetTimer(ShieldTime, this, &ABattleBumperPlayer::DestroyShield, 0.1f, false);
+				CollidedMines->Destroy();
+
+
 				//ShieldActivated = false;
 			}
 		}

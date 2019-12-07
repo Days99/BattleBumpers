@@ -15,7 +15,8 @@ AMyMine::AMyMine()
 void AMyMine::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	MineActivated = false;
+	GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &AMyMine::ActivateMine, 2.0f, false);
 }
 
 // Called every frame
@@ -23,5 +24,10 @@ void AMyMine::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AMyMine::ActivateMine()
+{
+	MineActivated = true;
 }
 
