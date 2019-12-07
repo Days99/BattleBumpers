@@ -2,6 +2,7 @@
 
 
 #include "MyGameInstance.h"
+#include "Net/UnrealNetwork.h"
 
 int UMyGameInstance::GenerateID(ABattleBumperPlayer* p)
 {
@@ -23,6 +24,12 @@ int UMyGameInstance::GenerateID(ABattleBumperPlayer* p)
 	return p->id;
 }
 
+void UMyGameInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty, FDefaultAllocator> &OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//DOREPLIFETIME(UGameInstance, this);
+}
+
 void UMyGameInstance::StartGame() {
 	if (players.Num() == maxPlayers) {
 		for (ABattleBumperPlayer* p : players) {
@@ -40,6 +47,16 @@ ABattleBumperPlayer* UMyGameInstance::GetRandomPlayer()
 
 void UMyGameInstance::SetMaxPlayers(int max) {
 	maxPlayers = max;
+}
+
+int UMyGameInstance::GetMaxPlayers()
+{
+	return maxPlayers;
+}
+
+void UMyGameInstance::ClearPlayers()
+{
+	players.Empty();
 }
 
 void UMyGameInstance::RemovePlayer(ABattleBumperPlayer* p)

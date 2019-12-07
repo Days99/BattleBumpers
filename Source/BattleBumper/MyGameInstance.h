@@ -18,14 +18,22 @@ class BATTLEBUMPER_API UMyGameInstance : public UGameInstance
 public:
 	int GenerateID(ABattleBumperPlayer* p);
 
+	UPROPERTY(Replicated)
 	int maxPlayers;
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void SetMaxPlayers(int max);
 
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	int GetMaxPlayers();
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void ClearPlayers();
+
 	void RemovePlayer(ABattleBumperPlayer * p);
 
 	void StartGame();
+
 
 	ABattleBumperPlayer* GetRandomPlayer();
 

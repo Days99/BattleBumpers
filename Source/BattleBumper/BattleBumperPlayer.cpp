@@ -131,6 +131,8 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 	DOREPLIFETIME(ABattleBumperPlayer, MyOwner);
 	DOREPLIFETIME(ABattleBumperPlayer, SNewLocation);
 	DOREPLIFETIME(ABattleBumperPlayer, SNewRotation);
+	DOREPLIFETIME(ABattleBumperPlayer, id);
+
 
 
 
@@ -139,8 +141,10 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
-	id = gameInstance->GenerateID(this);
+	if (ROLE_Authority) {
+		gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+		id = gameInstance->GenerateID(this);
+	}
 
 	if(id == 0 || id == 2)
 		myMesh->SetStaticMesh(Car1);
@@ -159,6 +163,9 @@ void ABattleBumperPlayer::BeginPlay()
 		}
 	}
 
+	gameInstance->StartGame();
+	
+
 
 
 	ShieldMesh->SetVisibility(false);
@@ -167,6 +174,7 @@ void ABattleBumperPlayer::BeginPlay()
 	respawnTransform = GetActorTransform();
 	CurrentPosition = GetActorLocation();
 	controller = Cast<APlayerController>(GetController());
+	
 
 
 
@@ -415,8 +423,8 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 					FVector EffectPosition = GetActorLocation() + FVector(0, 0, -50);
 					FVector EffectPosition2 = GetActorLocation() + FVector(0, 80, -50);
 
-					UGameplayStatics::SpawnEmitterAtLocation(World, HandbrakeEffect, EffectPosition);
-					UGameplayStatics::SpawnEmitterAtLocation(World, HandbrakeEffect, EffectPosition2);
+					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HandbrakeEffect, EffectPosition);
+					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HandbrakeEffect, EffectPosition2);
 
 				}
 				if (HandbrakeNormal < 0.1) {
@@ -454,7 +462,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		FVector PreviousLocation = GetActorLocation();
 		FVector ClientLocation;
 		FRotator ClientRotation;
-		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated);
+		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated, HandbrakeNormal);
 		if (Role == ROLE_AutonomousProxy) {
 			SetActorLocationAndRotation(NewLocation, NewRotation, true);
 		}
@@ -519,12 +527,12 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 
 void ABattleBumperPlayer::Reset()
 {
+	respawning = true;
 	SetActorLocation(RespawnPosition);
 	Lives = 3;
 	CurrentDamage = 0;
 	CurrentVelocity.X = 0;
 	ServerVelocity.X = 0;
-	respawning = true;
 	GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn, 4.0f, false);
 }
 
@@ -538,27 +546,28 @@ void ABattleBumperPlayer::CollisionFalse()
 	GetWorldTimerManager().ClearTimer(DelayTimer);
 }
 
-void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation,  FRotator NewRotation, float v, float d, bool handbrake, bool shield)
+void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation,  FRotator NewRotation, float v, float d, bool handbrake, bool shield, float handbrakeN)
 {
 	if (Role == ROLE_Authority) {
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
 	}
 	a->CurrentPosition = a->GetActorLocation();
-	if (a == this)
-	{
+	//if (a == this)
+	//{
 		a->CurrentVelocity.X = v;
 		//a->ServerVelocity.X = v;
-	}
+	//}
 
 	a->ShieldActivated = shield;
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
+	a->HandbrakeNormal = handbrakeN;
 	
-	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake, shield);
+	Client_ReliableFunctionCallThatRunsOnOwningClientOnly(a, NewLocation, NewRotation, v, d, handbrake, shield, handbrakeN);
 }
 
 
-bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
+bool ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Validate(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield, float handbrakeN)
 {
 	return true;
 }
@@ -592,7 +601,7 @@ void ABattleBumperPlayer::BumperCollision(FVector NImpactNormal, FVector NForwar
 	Server_BumperCollision(NImpactNormal, NForwardVector, NImpactStrenght,this);
 	
 }
-void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield)
+void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_Implementation(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float v, float d, bool handbrake, bool shield, float handbrakeN)
 {
 	//if (Role == ROLE_AutonomousProxy) {
 	ABattleBumperPlayer* player = nullptr;
@@ -600,6 +609,8 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 	FRotator R;
 	if (Role == ROLE_Authority) {
 	//	a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
+		a->onHandbrake = handbrake;
+		a->HandbrakeNormal = handbrakeN;
 
 
 	}
@@ -615,12 +626,20 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 		if (this != a) {
 			a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
 			//a->ShieldActivated = shield;
+			//a->onHandbrake = handbrake;
+			//a->HandbrakeNormal = handbrakeN;
+
 		}
+		a->HandbrakeNormal = handbrakeN;
 
 	}
 	else {
 		a->SetActorLocationAndRotation(NewLocation, NewRotation, true);
 		a->ShieldActivated = shield;
+		a->onHandbrake = handbrake;
+		a->HandbrakeNormal = handbrakeN;
+		//a->onHandbrake = handbrake;
+		//a->HandbrakeNormal = handbrakeN;
 	}
 	//a->CurrentPosition = a->GetActorLocation();
 	if (a == this)
@@ -628,10 +647,13 @@ void ABattleBumperPlayer::Client_ReliableFunctionCallThatRunsOnOwningClientOnly_
 		//a->ShieldActivated = shield;
 		//a->CurrentVelocity.X = v;
 		a->ServerVelocity.X = v;
+		//a->onHandbrake = handbrake;
+		//a->HandbrakeNormal = handbrakeN;
+
 	}
 	
 	a->CurrentDamage = d;
-	a->onHandbrake = handbrake;
+	//a->onHandbrake = handbrake;
 	
 
 
@@ -863,7 +885,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
-			if (Role == ROLE_Authority)
+			if (Role == ROLE_Authority && !respawning)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
 			CollidedActors->playerAssasin = this;	
 		}
@@ -937,7 +959,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
-			if (Role == ROLE_Authority)
+			if (Role == ROLE_Authority && !respawning)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
 			CollidedActors->playerAssasin = this;
 
@@ -1011,7 +1033,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		if (CollidedActors && CollidedActors->ShieldActivated == false  && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
-			if (Role == ROLE_Authority) {
+			if (Role == ROLE_Authority && !respawning) {
 				CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
 				CollidedActors->playerAssasin = this;
 			}
@@ -1086,8 +1108,9 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = CurrentVelocity.X;
-			if(Role==ROLE_Authority)
-			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
+			if (Role == ROLE_Authority && !respawning) {
+				CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
+			}
 			CollidedActors->playerAssasin = this;
 		
 			
@@ -1196,21 +1219,22 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 		ADeathZoneActor * deathactor = Cast<ADeathZoneActor>(OtherActor);
 
 		if (deathactor) {
-			SetActorLocation(RespawnPosition);
 			respawning = true;
+			SetActorLocation(RespawnPosition);
 			CurrentVelocity.X = 0;
 			ServerVelocity.X = 0;
 			Lives -= 1;
 			if (Lives == 0) {
-				//if (controller) {
-				//	gameInstance->RemovePlayer(this);
-				//	controller->DisableInput(controller);
-				//	if (playerAssasin) {
-				//		controller->Possess(playerAssasin);
-				//	}
-				//	else
-				//		controller->Possess(gameInstance->GetRandomPlayer());
-				//}
+				if (controller) {
+					gameInstance->RemovePlayer(this);
+					if (playerAssasin) {
+						controller->Possess(playerAssasin);
+					}
+					else
+						controller->Possess(gameInstance->GetRandomPlayer());
+					//}
+					controller->DisableInput(controller);
+				}
 			}
 			else
 			GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn,	4.0f, false);
