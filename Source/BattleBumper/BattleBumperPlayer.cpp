@@ -23,6 +23,7 @@
 #include "EngineUtils.h"
 #include "MyGameInstance.h"
 #include "MyRespawnActor.h"
+#include "MyMine.h"
 
 
 // Sets default values
@@ -738,13 +739,32 @@ void ABattleBumperPlayer::UseBoost() {
 	}
 }
 
+void ABattleBumperPlayer::SpawnMine()
+{
+	if(ToSpawn)
+	{
+		UWorld* world = GetWorld();
+		if (world)
+		{
+			FActorSpawnParameters SpawParams;
+			SpawParams.Owner = this;
+
+			FRotator rotator;
+
+			FVector spawnLocation = this->GetActorLocation();
+
+			world->SpawnActor<AMyMine>(ToSpawn, spawnLocation, rotator,SpawParams);
+		}
+	}
+}
+
 void ABattleBumperPlayer::DestroyShield()
 {
 	ShieldMesh->SetVisibility(false);
 	ShieldActivated = false;
 	GetWorldTimerManager().ClearTimer(ShieldTime);
 
-}
+}	
 
 void ABattleBumperPlayer::ActivateItem()
 {
@@ -753,6 +773,11 @@ void ABattleBumperPlayer::ActivateItem()
 	{
 		ActivateShield();
 		ShieldCollection = false;
+	}
+	if (MineCollection == true)
+	{
+		MineDroped = true;
+		MineCollection = false;
 	}
 
 	
