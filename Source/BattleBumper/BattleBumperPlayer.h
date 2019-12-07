@@ -27,6 +27,9 @@ public:
 		bool ShieldCollection = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
+		bool MineCollection = false;
+
+	UPROPERTY(Replicated, EditAnywhere)
 		bool WasHit = false;
 
 	UPROPERTY(EditAnywhere)
@@ -46,9 +49,14 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		bool ShieldCollision = false;
+	UPROPERTY(EditAnywhere)
+		bool MineCollision = false;
 	UPROPERTY(Replicated,EditAnywhere)
 		bool ShieldActivated = false;
-
+	UPROPERTY(Replicated, EditAnywhere)
+		bool MineDroped = false;
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class AMyMine> ToSpawn;
 	UPROPERTY(Replicated, EditAnywhere)
 		bool AddDamage = false;
 	UPROPERTY(Replicated, EditAnywhere)
@@ -203,6 +211,7 @@ public:
 	void StartGrowing();
 	void StopGrowing();
 	void UseBoost();
+	void SpawnMine();
 	void DestroyShield();
 	void ActivateItem();
 	void ActivateShield();
