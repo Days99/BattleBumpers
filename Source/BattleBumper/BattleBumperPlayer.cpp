@@ -584,7 +584,7 @@ void ABattleBumperPlayer::Server_BumperCollision_Implementation(FVector NImpactN
 {
 	a->CollsionVector = -NImpactNormal + NForwardVector;
 	a->ImpactStrenght = NImpactStrenght;
-
+	a->playerAssasin = a;
 	a->WasHit = true;
 	a->AddDamage = true;
 	a->GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &ABattleBumperPlayer::CollisionFalse, 1.0f, false);
@@ -681,6 +681,7 @@ float NImpactStrenght, ABattleBumperPlayer* a)
 {
 	a->CollsionVector = -NImpactNormal + NForwardVector;
 	a->ImpactStrenght = NImpactStrenght;
+	a->playerAssasin = a;
 	a->WasHit = true;
 	a->AddDamage = true;
 	a->GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &ABattleBumperPlayer::CollisionFalse, 1.0f, false);
@@ -690,6 +691,7 @@ void ABattleBumperPlayer::ClientTo_BumperCollision_Implementation(FVector NImpac
 {
 	a->CollsionVector = -NImpactNormal + NForwardVector;
 	a->ImpactStrenght = NImpactStrenght;
+	a->playerAssasin = a;
 	a->WasHit = true;
 	a->AddDamage = true;
 	a->GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &ABattleBumperPlayer::CollisionFalse, 1.0f, false);
@@ -1060,8 +1062,8 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 			float v = ServerVelocity.X;
 			if (Role == ROLE_Authority && !respawning) {
 				CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
-				CollidedActors->playerAssasin = this;
 			}
+			CollidedActors->playerAssasin = this;
 		
 			
 		}
@@ -1252,13 +1254,20 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 			if (Lives == 0) {
 				if (controller) {
 					gameInstance->RemovePlayer(this);
+					controller->DisableInput(controller);
+					respawning = true;
 					if (playerAssasin) {
-						controller->Possess(playerAssasin);
+						camera = playerAssasin->camera;
 					}
 					else
-						controller->Possess(gameInstance->GetRandomPlayer());
+						camera = gameInstance->GetRandomPlayer()->camera;
+					//if (playerAssasin) {
+					//	controller->Possess(playerAssasin);
 					//}
-					controller->DisableInput(controller);
+					//else
+					//	controller->Possess(gameInstance->GetRandomPlayer());
+					////}
+					//controller->DisableInput(controller);
 				}
 			}
 			else

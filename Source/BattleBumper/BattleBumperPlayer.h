@@ -23,10 +23,10 @@ public:
 	UPROPERTY(EditAnywhere)
 		bool collision = false;
 
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 		bool ShieldCollection = false;
 
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 		bool MineCollection = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
@@ -166,6 +166,7 @@ public:
 
 	class APlayerController* controller;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ABattleBumperPlayer* playerAssasin;
 
 	UPROPERTY(replicated)
