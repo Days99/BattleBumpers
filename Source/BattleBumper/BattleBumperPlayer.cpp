@@ -35,6 +35,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	MyOwner = GetOwner();
 	respawnTransform = GetActorTransform();
 	Lives = 3;
+	
 	// Create a dummy root component we can attach things to.
 	
 	// Create a camera and a visible object
@@ -50,9 +51,12 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	if (Role == ROLE_Authority)
 		World = GetWorld();
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Game/Assets/NewBattleBumper"));
-	UStaticMesh* Asset = MeshAsset.Object;
-	myMesh->SetStaticMesh(Asset);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>Car1Asset(TEXT("/Game/Assets/NewBattleBumper"));
+	Car1 = Car1Asset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>Car2Asset(TEXT("/Game/Assets/BattleBumperThin"));
+	Car2 = Car2Asset.Object;
 
 
 	
@@ -137,6 +141,11 @@ void ABattleBumperPlayer::BeginPlay()
 	Super::BeginPlay();
 	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
 	id = gameInstance->GenerateID(this);
+
+	if(id == 0 || id == 2)
+		myMesh->SetStaticMesh(Car1);
+	else
+		myMesh->SetStaticMesh(Car2);
 
 	TSubclassOf<AMyRespawnActor> classToFind;
 	classToFind = AMyRespawnActor::StaticClass();
@@ -738,7 +747,7 @@ void ABattleBumperPlayer::ReleaseHandbrake() {
 	else if(CurrentRotation.Yaw > maxVelocityY)
 		CurrentRotation.Yaw = maxVelocityY;
 
-	if (HandbrakeNormal < 0.3 && HandbrakeNormal != 0) {
+	if (HandbrakeNormal < 0.3 && HandbrakeNormal != 0 && Grounded > 0) {
 		CurrentVelocity.X += HandbrakeBoost;
 	}
 	if (CurrentVelocity.X > maxVelocityX)

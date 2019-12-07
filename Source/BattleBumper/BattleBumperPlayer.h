@@ -141,6 +141,10 @@ protected:
 
 	float CameraYaw;
 
+	UStaticMesh* Car1;
+	UStaticMesh* Car2;
+
+
 
 public:	
 	// Called every frame
