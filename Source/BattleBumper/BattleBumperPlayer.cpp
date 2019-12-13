@@ -372,11 +372,13 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				if (difference < 1)
 					NewRotation.Pitch = GroundRotation.Pitch;
 			}
-			else if (NewRotation.Pitch > -20 && Grounded == 0)
+			else if (NewRotation.Pitch > -30 && Grounded == 0)
 				NewRotation.Pitch -= (30 + (30 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
 
 			if (Grounded <= 0) {
-				NewLocation += (GetActorUpVector() * -600) * DeltaTime;
+				NewLocation += (GetActorUpVector() * -100 * g) * DeltaTime;
+				if(!WasHit && !ShieldCollision && !MineCollisions && !HitWorld && !respawning)
+				g += 0.05;
 			}
 			float impactStrnght = 0;
 			if (WasHit&&collision==false)
@@ -1430,6 +1432,10 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 				OnGround = false;
 
 			Grounded--;
+
+			if (Grounded == 0) {
+				g = 1;
+			}
 
 			//if (GetActorRotation().Pitch > 0 && Grounded == 0) {
 			//	GroundRotation.Pitch = -GetActorRotation().Pitch;

@@ -2,7 +2,112 @@
 
 
 #include "MyGameInstance.h"
+#include "Engine//Engine.h"
+#include "UObject/ConstructorHelpers.h"
+#include "OnlineSessionSettings.h"
+#include "UserWidget.h"
+#include "Components/Button.h"
 #include "Net/UnrealNetwork.h"
+
+//
+//void UMyGameInstance::Init() 
+//{
+//	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+//
+//	if (Subsystem) {
+//		SessionInterface = Subsystem->GetSessionInterface();
+//		if (SessionInterface.IsValid()) {
+//			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UMyGameInstance::OnCreateSessionComplete);
+//			SessionInterface->OnStartSessionCompleteDelegates.AddUObject(this, &UMyGameInstance::OnStartSessionComplete);
+//			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UMyGameInstance::OnDestroySessionComplete);
+//			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UMyGameInstance::OnFindSessionsComplete);
+//			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UMyGameInstance::OnJoinSessionComplete);
+//
+//			SearchSession();
+//		}
+//	}
+//
+//}
+//
+//void UMyGameInstance::JoinSession()
+//{
+//	if (SessionSearch.IsUnique()) {
+//		if (SessionSearch->SearchResults.Num() > 0) {
+//			SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[0]);
+//		}
+//	}
+//}
+//void UMyGameInstance::SearchSession()
+//{
+//	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+//
+//	if (SessionSearch.IsUnique()) {
+//		SessionSearch->bIsLanQuery = true;
+//		SessionInterface->FindSessions(0, SessionSearch);
+//	}
+//}
+//void UMyGameInstance::Host()
+//{
+//	if (SessionInterface.IsValid()) {
+//		FNamedOnlineSession* existingSession = SessionInterface->GetNamedSession(SESSION_NAME);
+//
+//		if(existingSession){
+//			DestroySession();
+//		}
+//		else {
+//			CreateSession();
+//		}
+//		CreateSession();
+//
+//	}
+//}
+//void UMyGameInstance::Join()
+//{
+//	JoinSession();
+//}
+//void UMyGameInstance::CreateSession()
+//{
+//	FOnlineSessionSettings Settings;
+//	Settings.bIsLANMatch = true;
+//	Settings.bShouldAdvertise = true;
+//	Settings.NumPublicConnections = 8;
+//
+//	SessionInterface->CreateSession(0,SESSION_NAME, Settings);
+//	//FNamedOnlineSession* existingSession = SessionInterface
+//}
+//void UMyGameInstance::DestroySession()
+//{
+//}
+//void UMyGameInstance::StartSession()
+//{
+//}
+//void UMyGameInstance::DestroySession()
+//{
+//}
+//void UMyGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) {
+//
+//}
+//
+//void UMyGameInstance::OnFindSessionsComplete(bool bWasSuccessful) {
+//	if (bWasSuccessful && SessionSearch.IsUnique) {
+//		for (int i = 0; i < SessionSearch->SearchResults.Num(); i++) {
+//			FOnlineSessionSearchResult searchResult = SessionSearch->SearchResults[i];
+//		}
+//	}
+//
+//}
+//
+//void UMyGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful) {
+//
+//}
+//
+//void UMyGameInstance::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
+//{
+//}
+//
+//void UMyGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type type)
+//{
+//}
 
 int UMyGameInstance::GenerateID(ABattleBumperPlayer* p)
 {
@@ -23,6 +128,26 @@ int UMyGameInstance::GenerateID(ABattleBumperPlayer* p)
 	}
 	return p->id;
 }
+//
+//void UMyGameInstance::LoadMenu() {
+//	if (MenuWidgetClass)
+//	{
+//		MenuWidget = CreateWidget<UUserWidget>(GetWorld(), MenuWidgetClass);
+//		MenuWidget->AddToViewport();
+//		UButton* connectButton = Cast<UButton>(MenuWidget->GetWidgetFromName(TEXT("HostButton")));
+//		if (connectButton)
+//		{
+//			connectButton->OnClicked.AddDynamic(this, &UMyGameInstance::CreateSession);
+//		}
+//		UButton* hostButton = Cast<UButton>(MenuWidget->GetWidgetFromName(TEXT("JoinButton")));
+//		if (hostButton)
+//		{
+//			hostButton->SetIsEnabled(false);
+//			hostButton->OnClicked.AddDynamic(this, &UMyGameInstance::Host);
+//		}
+//	}
+//}
+
 
 void UMyGameInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty, FDefaultAllocator> &OutLifetimeProps) const {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

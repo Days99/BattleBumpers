@@ -110,6 +110,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		int Lives;
+
+	UPROPERTY(EditAnywhere)
+		float g;
 	float oMaxVelocityY;
 	UPROPERTY(Replicated)
 	FVector SNewLocation;
