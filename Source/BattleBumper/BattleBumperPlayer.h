@@ -98,6 +98,7 @@ public:
 	UPROPERTY(Replicated, EditAnywhere)
 		UParticleSystem * HandbrakeEffect;
 
+
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CurrentPosition;
 
@@ -273,6 +274,10 @@ public:
 	UStaticMeshComponent* ShieldMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	UStaticMeshComponent* BoostEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	class UParticleSystemComponent* BoostsRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	class UParticleSystemComponent* BoostsLeft;
 	//Input variables
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;
