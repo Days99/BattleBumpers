@@ -223,6 +223,9 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (winner) {
+		//controller->DisableInput(controller);
+	}
 	// Handle growing and shrinking based on our "Grow" action
 	if (collision == true)
 	{
@@ -1380,16 +1383,16 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 			CurrentVelocity.X = 0;
 			ServerVelocity.X = 0;
 			Lives -= 1;
-			if (Lives == 0) {
+			if (Lives == 0) {	
 				if (controller) {
 					gameInstance->RemovePlayer(this);
 					controller->DisableInput(controller);
 					respawning = true;
-					if (playerAssasin) {
-						camera = playerAssasin->camera;
-					}
-					else
-						camera = gameInstance->GetRandomPlayer()->camera;
+				//	if (playerAssasin) {
+				//		camera = playerAssasin->camera;
+				//	}
+				//	else
+				//		camera = gameInstance->GetRandomPlayer()->camera;
 					//if (playerAssasin) {
 					//	controller->Possess(playerAssasin);
 					//}

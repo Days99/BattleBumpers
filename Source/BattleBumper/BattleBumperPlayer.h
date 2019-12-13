@@ -225,6 +225,8 @@ public:
 	UFUNCTION(Server, Reliable,WithValidation)
 		void Server_SpawnMine(ABattleBumperPlayer* a);
 
+	UPROPERTY(BlueprintReadWrite)
+	bool winner;
 
 	void DestroyShield();
 	void ActivateItem();

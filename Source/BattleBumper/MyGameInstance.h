@@ -28,8 +28,14 @@ public:
 	int GetMaxPlayers();
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void ResetGame();
+
+
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void ClearPlayers();
 
+	UFUNCTION(NetMulticast, Reliable)
 	void RemovePlayer(ABattleBumperPlayer * p);
 
 	void StartGame();

@@ -54,15 +54,25 @@ int UMyGameInstance::GetMaxPlayers()
 	return maxPlayers;
 }
 
+void UMyGameInstance::ResetGame()
+{
+	for (ABattleBumperPlayer* p : players) {
+		p->Reset();
+	}
+}
+
 void UMyGameInstance::ClearPlayers()
 {
 	players.Empty();
 }
 
-void UMyGameInstance::RemovePlayer(ABattleBumperPlayer* p)
+void UMyGameInstance::RemovePlayer_Implementation(ABattleBumperPlayer* p)
 {
 	if (players.Contains(p)) {
 		players.Remove(p);
+	}
+	if (players.Num() >= 1) {
+		players[0]->winner = true;
 	}
 }
 
