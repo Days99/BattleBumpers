@@ -8,6 +8,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/InputComponent.h"
 #include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Actor.h"
@@ -44,6 +45,11 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	myMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	ShieldMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SHIELDS"));
 	BoostEffect = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BoostEffect"));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> PS(TEXT("ParticleSystem'/Game/StarterContent/Particles/P_Fire.P_Fire'"));
+	BoostsRight = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC1"));
+	BoostsRight->SetTemplate(PS.Object);
+	BoostsLeft = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC2"));
+	BoostsLeft->SetTemplate(PS.Object);
 	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
 
 	bReplicates = true;
@@ -76,7 +82,8 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// Attach our camera and visible object to our root component. Offset and rotate the camera.
 	springArm->SetupAttachment(RootComponent);
 	BoostEffect->SetupAttachment(RootComponent);
-	
+	BoostsRight->SetupAttachment(RootComponent);
+	BoostsLeft->SetupAttachment(RootComponent);
 	springArm->TargetArmLength = 450.0;
 
 	if (Role != ROLE_Authority)
@@ -174,6 +181,8 @@ void ABattleBumperPlayer::BeginPlay()
 
 	ShieldMesh->SetVisibility(false);
 	//BoostEffect->SetVisibility(false,true);
+	BoostsLeft->DeactivateSystem();
+	BoostsRight->DeactivateSystem();
 	oMaxVelocityY = maxVelocityY;
 	oMaxAccelaration = maxAccelaration;
 	respawnTransform = GetActorTransform();
@@ -328,7 +337,8 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	}
 	if (boosted && CurrentVelocity.X < maxVelocityX) {
 		boosted = false;
-		BoostEffect->SetVisibility(false,true);
+		BoostsRight->DeactivateSystem();
+		BoostsLeft->DeactivateSystem();
 	}
 
 
@@ -754,7 +764,9 @@ void ABattleBumperPlayer::UseBoost() {
 		CurrentVelocity.X += 500;
 		boost--;
 		if (CurrentVelocity.X > maxVelocityX) {
-			BoostEffect->SetVisibility(true);
+			BoostsLeft->ActivateSystem();
+			BoostsRight->ActivateSystem();
+
 			boosted = true;
 		}
 	}
