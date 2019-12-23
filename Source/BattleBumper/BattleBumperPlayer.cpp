@@ -45,11 +45,21 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	myMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MESH"));
 	ShieldMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SHIELDS"));
 	BoostEffect = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BoostEffect"));
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> PS(TEXT("ParticleSystem'/Game/StarterContent/Particles/P_Fire.P_Fire'"));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> PS(TEXT("ParticleSystem'/Game/ParticleEffects/P_FireBoost.P_FireBoost'"));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> PSN(TEXT("ParticleSystem'/Game/ParticleEffects/P_FireNormal.P_FireNormal'"));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> PSU(TEXT("ParticleSystem'/Game/ParticleEffects/P_FireUnderBoost.P_FireUnderBoost'"));
 	BoostsRight = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC1"));
 	BoostsRight->SetTemplate(PS.Object);
 	BoostsLeft = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC2"));
 	BoostsLeft->SetTemplate(PS.Object);
+	NormalBoostRight = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC3"));
+	NormalBoostRight->SetTemplate(PSN.Object);
+	NormalBoostLeft = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC4"));
+	NormalBoostLeft->SetTemplate(PSN.Object);
+	UnderBoostRight = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC5"));
+	UnderBoostRight->SetTemplate(PSU.Object);
+	UnderBoostLeft = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC6"));
+	UnderBoostLeft->SetTemplate(PSU.Object);
 	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
 
 	bReplicates = true;
@@ -84,6 +94,10 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	BoostEffect->SetupAttachment(RootComponent);
 	BoostsRight->SetupAttachment(RootComponent);
 	BoostsLeft->SetupAttachment(RootComponent);
+	NormalBoostRight->SetupAttachment(RootComponent);
+	NormalBoostLeft->SetupAttachment(RootComponent);
+	UnderBoostRight->SetupAttachment(RootComponent);
+	UnderBoostLeft->SetupAttachment(RootComponent);
 	springArm->TargetArmLength = 450.0;
 
 	if (Role != ROLE_Authority)
@@ -183,6 +197,8 @@ void ABattleBumperPlayer::BeginPlay()
 	//BoostEffect->SetVisibility(false,true);
 	BoostsLeft->DeactivateSystem();
 	BoostsRight->DeactivateSystem();
+	UnderBoostLeft->DeactivateSystem();
+	UnderBoostRight->DeactivateSystem();
 	oMaxVelocityY = maxVelocityY;
 	oMaxAccelaration = maxAccelaration;
 	respawnTransform = GetActorTransform();
@@ -274,6 +290,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	if (CurrentVelocity.X >= dragXBoost && boosted) {
 		CurrentAcceleration.X -= dragXBoost;
 	}
+
 	if (CurrentRotation.Yaw > dragZ && CurrentAcceleration.Y == 0)
 	{
 		CurrentAcceleration.Y -= dragZ;
@@ -342,7 +359,10 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		boosted = false;
 		BoostsRight->DeactivateSystem();
 		BoostsLeft->DeactivateSystem();
+		NormalBoostLeft->ActivateSystem();
+		NormalBoostRight->ActivateSystem();
 	}
+
 
 
 
@@ -579,6 +599,18 @@ void ABattleBumperPlayer::CollisionFalse()
 	WasHit = false;
 	GetWorldTimerManager().ClearTimer(DelayTimer);
 }
+void ABattleBumperPlayer::BoostFalse()
+{
+	boosting = false;
+	UnderBoostLeft->DeactivateSystem();
+	UnderBoostRight->DeactivateSystem();
+	if (!boosted)
+	{
+		NormalBoostLeft->ActivateSystem();
+		NormalBoostRight->ActivateSystem();
+	}
+	GetWorldTimerManager().ClearTimer(DelayTimerBoost);
+}
 
 void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementation(ABattleBumperPlayer * a, FVector NewLocation,  FRotator NewRotation, float v, float d, bool handbrake, bool shield, float handbrakeN)
 {
@@ -766,14 +798,22 @@ void ABattleBumperPlayer::Handbrake() {
 
 void ABattleBumperPlayer::UseBoost() {
 	if (boost > 0) {
+		NormalBoostLeft->DeactivateSystem();
+		NormalBoostRight->DeactivateSystem();
+		UnderBoostLeft->ActivateSystem();
+		UnderBoostRight->ActivateSystem();
 		CurrentVelocity.X += 500;
-		boost--;
 		if (CurrentVelocity.X > maxVelocityX) {
 			BoostsLeft->ActivateSystem();
 			BoostsRight->ActivateSystem();
-
+			NormalBoostLeft->DeactivateSystem();
+			NormalBoostRight->DeactivateSystem();
 			boosted = true;
+			
 		}
+			boosting = true;
+			GetWorld()->GetTimerManager().SetTimer(DelayTimerBoost, this, &ABattleBumperPlayer::BoostFalse, 0.5f, false);	
+			boost--;
 	}
 }
 
@@ -866,7 +906,9 @@ void ABattleBumperPlayer::ReleaseHandbrake() {
 		CurrentVelocity.X += HandbrakeBoost;
 	}
 	if (CurrentVelocity.X > maxVelocityX)
+	{
 		boosted = true;
+	}
 }
 
 
@@ -941,9 +983,9 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 2;
-			if (i == 1)
+			if (i == 1 && ShieldCollection == false && MineCollection == false)
 				ShieldCollection = true;
-			else
+			else if(ShieldCollection == false && MineCollection == false)
 				MineCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
@@ -1028,9 +1070,9 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 2;
-			if (i == 1)
+			if (i == 1 && ShieldCollection == false && MineCollection == false)
 				ShieldCollection = true;
-			else
+			else if (ShieldCollection == false && MineCollection == false)
 				MineCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
@@ -1119,9 +1161,9 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 2;
-			if (i == 1)
+			if (i == 1 && ShieldCollection == false && MineCollection == false)
 				ShieldCollection = true;
-			else
+			else if (ShieldCollection == false && MineCollection == false)
 				MineCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
@@ -1210,9 +1252,9 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 2;
-			if (i == 1)
+			if (i == 1 && ShieldCollection == false && MineCollection == false)
 				ShieldCollection = true;
-			else
+			else if (ShieldCollection == false && MineCollection == false)
 				MineCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();

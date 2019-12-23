@@ -127,6 +127,8 @@ public:
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
 	UPROPERTY(EditAnywhere)
+		FTimerHandle DelayTimerBoost;
+	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimerMine;
 
 	UPROPERTY(EditAnywhere)
@@ -236,6 +238,7 @@ public:
 	void ActivateShield();
 	void ShieldTimer();
 	void CollisionFalse();
+	void BoostFalse();
 	void CollisionWorldFalse();
 	void BeginShieldTimer();
 	void MineFalse();
@@ -278,6 +281,14 @@ public:
 	class UParticleSystemComponent* BoostsRight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	class UParticleSystemComponent* BoostsLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		class UParticleSystemComponent* NormalBoostRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		class UParticleSystemComponent* NormalBoostLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		class UParticleSystemComponent* UnderBoostRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		class UParticleSystemComponent* UnderBoostLeft;
 	//Input variables
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;
@@ -336,6 +347,8 @@ public:
 	bool bGrowing;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool boosted;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool boosting;
 	UPROPERTY(replicated, EditAnywhere, BlueprintReadWrite, Category = "Collision")
 	ABattleBumperPlayer* CollidedActor;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
