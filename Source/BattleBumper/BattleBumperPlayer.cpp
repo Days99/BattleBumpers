@@ -73,7 +73,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>Car1Asset(TEXT("/Game/Assets/NewBattleBumper"));
 	Car1 = Car1Asset.Object;
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>Car2Asset(TEXT("/Game/Assets/BattleBumperThin"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>Car2Asset(TEXT("/Game/Assets/BattleBumperThinWithTire"));
 	Car2 = Car2Asset.Object;
 
 
@@ -406,9 +406,9 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				NewRotation.Pitch -= (30 + (30 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
 
 			if (Grounded <= 0) {
-				NewLocation += (GetActorUpVector() * -100 * g) * DeltaTime;
+				NewLocation += (GetActorUpVector() * -300 * g) * DeltaTime;
 				if(!WasHit && !ShieldCollision && !MineCollisions && !HitWorld && !respawning)
-				g += 0.05;
+				g += 0.01;
 			}
 			float impactStrnght = 0;
 			if (WasHit&&collision==false)
@@ -1549,7 +1549,7 @@ void ABattleBumperPlayer::CalculateSlopeRotation(){
 	GroundRotation.Pitch = GroundedRotationValue;
 	currentDistanceZ = GetActorLocation().Z - GroundPosition.Z;
 	if (DistanceZ == 0.0f) {
-		DistanceZ = 70;
+		DistanceZ = 40;
 	}
 	if(OnGround)
 	locationZ = DistanceZ - currentDistanceZ;
