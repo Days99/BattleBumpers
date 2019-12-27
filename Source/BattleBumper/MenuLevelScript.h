@@ -41,9 +41,21 @@ protected:
 		TSubclassOf<class UUserWidget> MatchmakingWidgetClass;
 	UUserWidget* MatchmakingWidget;
 	UScrollBox* sessionListScrollBox;
+	FTimerHandle serverListTimerHandler;
+
+	bool readyToHost;
+	int hostPort;
+	bool readyToUpdateList;
+
+	UFUNCTION()
+		void OnUpdateServerList();
 
 	UFUNCTION()
 		void OnConnectClicked();
 	UFUNCTION()
 		void OnHostClicked();
+
+public:
+	void UpdateSessionList(FString serverinfo);
+	void StartGameHost(int port);
 };

@@ -18,6 +18,7 @@ public:
 	virtual bool Init();
 	virtual uint32 Run();
 	virtual void Stop();
+	bool IsConnected();
 
 private:
 

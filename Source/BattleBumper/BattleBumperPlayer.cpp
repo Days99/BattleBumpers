@@ -1507,7 +1507,7 @@ void ABattleBumperPlayer::CalculateSlopeRotation(){
 	GroundRotation.Pitch = GroundedRotationValue;
 	currentDistanceZ = GetActorLocation().Z - GroundPosition.Z;
 	if (DistanceZ == 0.0f) {
-		DistanceZ = 40;
+		DistanceZ = 20;
 	}
 	if(OnGround)
 	locationZ = DistanceZ - currentDistanceZ;

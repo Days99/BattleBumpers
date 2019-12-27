@@ -53,3 +53,8 @@ void TCPClient::Stop()
 {
 	running = false;
 }
+
+bool TCPClient::IsConnected()
+{
+	return connected;
+}
