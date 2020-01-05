@@ -416,18 +416,18 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				impactStrnght = (ImpactStrenght / 500) * (CurrentDamage / 2);
 				if (ImpactStrenght >= 2000 )
 				{
-					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage) *1.3f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/1.3f))) * DeltaTime;
+					NewLocation +=((CollsionVector * ((ImpactStrenght + CurrentDamage) *1.3f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/1.3f))) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 50;
 				}
 				else if (ImpactStrenght >= 1500 )
 				{
-					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage) * 1.1f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/2) )) * DeltaTime;
-					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 55;
+					NewLocation += ((CollsionVector * ((ImpactStrenght + CurrentDamage))) + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage) / 1.5f))) * DeltaTime;
+					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 60;
 				}
 				else if (ImpactStrenght >= 1000)
 				{
-					NewLocation +=( (CollsionVector * ((ImpactStrenght + CurrentDamage))) + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/1.5f)) )* DeltaTime;
-					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 60;
+					NewLocation += ((CollsionVector * ((ImpactStrenght + CurrentDamage) * 1.1f)) + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage) / 2))) * DeltaTime;
+					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 55;
 				}
 				else if (ImpactStrenght < 999)
 				{
@@ -809,7 +809,6 @@ void ABattleBumperPlayer::UseBoost() {
 			NormalBoostLeft->DeactivateSystem();
 			NormalBoostRight->DeactivateSystem();
 			boosted = true;
-			
 		}
 			boosting = true;
 			GetWorld()->GetTimerManager().SetTimer(DelayTimerBoost, this, &ABattleBumperPlayer::BoostFalse, 0.5f, false);	
