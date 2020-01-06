@@ -386,7 +386,6 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			NewLocation += GetActorForwardVector() * CurrentVelocity.X * DeltaTime;
 
 
-
 			if (Grounded > 0) {
 				CalculateSlopeRotation();
 
@@ -404,6 +403,34 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 			else if (NewRotation.Pitch > -30 && Grounded == 0)
 				NewRotation.Pitch -= (30 + (30 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
+
+			FRotator Crotation = GetActorRotation();
+
+			if (CurrentAcceleration.Y > 0) {
+				if(Crotation.Roll < 30)
+				NewRotation.Roll += CurrentAcceleration.Y / maxVelocityY * 2;
+			}
+			else if (CurrentAcceleration.Y < 0) {
+				if (Crotation.Roll > -30)
+					NewRotation.Roll += CurrentAcceleration.Y / maxVelocityY * 2;
+			}
+			else {
+				if (Crotation.Roll < 1 && Crotation.Roll > 0) {
+					Crotation.Roll = 0;
+				}
+				if (Crotation.Roll > -1 && Crotation.Roll < 0) {
+					Crotation.Roll = 0;
+				}
+
+				if (Crotation.Roll > 0) {
+					NewRotation.Roll -= 1;
+				}
+				else if(Crotation.Roll < 0) {
+					NewRotation.Roll += 1;
+				}
+				else
+				NewRotation.Roll = 0;
+			}
 
 			if (Grounded <= 0) {
 				NewLocation += (GetActorUpVector() * -300 * g) * DeltaTime;
@@ -513,9 +540,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			ShieldCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			ShieldMesh->SetVisibility(false);
 		}
-		FVector PreviousLocation = GetActorLocation();
-		FVector ClientLocation;
-		FRotator ClientRotation;
+
 		Server_ReliableFunctionCallThatRunsOnServer(this, NewLocation, NewRotation, CurrentVelocity.X, CurrentDamage, onHandbrake, ShieldActivated, HandbrakeNormal);
 		if (Role == ROLE_AutonomousProxy) {
 			SetActorLocationAndRotation(NewLocation, NewRotation, true);
@@ -944,6 +969,7 @@ void ABattleBumperPlayer::Move_YAxis(float AxisValue)
 	if (CurrentAcceleration.Y < -maxVelocityY) {
 		CurrentAcceleration.Y = -maxVelocityY;
 	}
+
 }
 
 void ABattleBumperPlayer::mouseYawn(float axis)
@@ -1548,7 +1574,7 @@ void ABattleBumperPlayer::CalculateSlopeRotation(){
 	GroundRotation.Pitch = GroundedRotationValue;
 	currentDistanceZ = GetActorLocation().Z - GroundPosition.Z;
 	if (DistanceZ == 0.0f) {
-		DistanceZ = 20;
+		DistanceZ = 40;
 	}
 	if(OnGround)
 	locationZ = DistanceZ - currentDistanceZ;
