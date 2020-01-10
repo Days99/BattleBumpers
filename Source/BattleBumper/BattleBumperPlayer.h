@@ -32,6 +32,9 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 		bool MineCollection = false;
 
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+		bool GrenadeCollection = false;
+
 	UPROPERTY(Replicated, EditAnywhere)
 		bool WasHit = false;
 
@@ -60,6 +63,8 @@ public:
 		bool MineDroped = false;
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class AMyMine> ToSpawn;
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class AMyGrenade> ToSpawnGrenade;
 	UPROPERTY(Replicated, EditAnywhere)
 		bool AddDamage = false;
 	UPROPERTY(Replicated, EditAnywhere)
@@ -100,6 +105,8 @@ public:
 		float Timer;
 	UPROPERTY(Replicated, EditAnywhere)
 		UParticleSystem * HandbrakeEffect;
+	UPROPERTY(Replicated, EditAnywhere)
+		UParticleSystem* ExplosionEffect;
 
 
 	UPROPERTY(Replicated, EditAnywhere)
@@ -239,6 +246,10 @@ public:
 		void SpawnSawblade(ABattleBumperPlayer* a);
 	UFUNCTION(Server, Reliable, WithValidation)
 		void Server_SpawnSawblade(ABattleBumperPlayer* a);
+	UFUNCTION(NetMulticast, Reliable)
+		void SpawnGrenade(ABattleBumperPlayer* a);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void Server_SpawnGrenade(ABattleBumperPlayer* a);
 
 	UPROPERTY(BlueprintReadWrite)
 	bool winner;

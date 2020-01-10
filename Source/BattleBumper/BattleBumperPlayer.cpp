@@ -25,6 +25,7 @@
 #include "MyGameInstance.h"
 #include "MyRespawnActor.h"
 #include "MyMine.h"
+#include "MyGrenade.h"
 #include "SawbladeActor.h"
 
 
@@ -844,6 +845,35 @@ void ABattleBumperPlayer::UseBoost() {
 	}
 }
 
+void ABattleBumperPlayer::SpawnGrenade_Implementation(ABattleBumperPlayer* a)
+{
+	if (ToSpawnGrenade)
+	{
+		UWorld* world = a->GetWorld();
+		if (world)
+		{
+			FActorSpawnParameters SpawParams;
+			SpawParams.Owner = a;
+
+			FRotator rotator;
+
+			FVector spawnLocation = a->GetActorLocation() + GetActorUpVector() * 150;
+
+			world->SpawnActor<AMyGrenade>(ToSpawnGrenade, spawnLocation, GetActorRotation(), SpawParams);
+		}
+	}
+}
+
+void ABattleBumperPlayer::Server_SpawnGrenade_Implementation(ABattleBumperPlayer* a)
+{
+	SpawnGrenade(a);
+}
+
+bool ABattleBumperPlayer::Server_SpawnGrenade_Validate(ABattleBumperPlayer* a)
+{
+	return true;
+}
+
 void ABattleBumperPlayer::SpawnSawblade_Implementation(ABattleBumperPlayer* a)
 {
 	if (sawblade)
@@ -939,7 +969,7 @@ void ABattleBumperPlayer::SpawnMine_Implementation(ABattleBumperPlayer* a)
 			FRotator rotator;
 
 			FVector spawnLocation = a->GetActorLocation() - GetActorUpVector() * 150;
-
+			
 			world->SpawnActor<AMyMine>(ToSpawn, spawnLocation, rotator, SpawParams);
 		}
 	}
@@ -948,7 +978,6 @@ void ABattleBumperPlayer::SpawnMine_Implementation(ABattleBumperPlayer* a)
 void ABattleBumperPlayer::Server_SpawnMine_Implementation(ABattleBumperPlayer* a)
 {
 		SpawnMine(a);
-	
 }
 
 bool ABattleBumperPlayer::Server_SpawnMine_Validate(ABattleBumperPlayer* a)
@@ -983,6 +1012,11 @@ void ABattleBumperPlayer::ActivateItem()
 	{
 		Server_SpawnMine(this);
 		MineCollection = false;
+	}
+	if (GrenadeCollection == true)
+	{
+		Server_SpawnGrenade(this);
+		GrenadeCollection = false;
 	}
 	if (SawbladeCollection == true) {
 		Server_SpawnSawblade(this);
@@ -1089,14 +1123,16 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
+		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 3 + 1;
-			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
-			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				MineCollection = true;
-			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				SawbladeCollection = true;
-
+			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
+				GrenadeCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
 		}
@@ -1105,10 +1141,24 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		if (Mine && (Mine->MineActivated == true)) {
 			if (!ShieldActivated)
 			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Mine->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+
 				Mine->Destroy();
 			}
 			
+		}
+
+		AMyGrenade* Grenade = Cast<AMyGrenade>(OtherActor);
+		if (Grenade && (Grenade->GrenadeActivated == true)) {
+			if (!ShieldActivated)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
+				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+
+				Grenade->Destroy();
+			}
+
 		}
 		
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
@@ -1179,24 +1229,39 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
+		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 3 + 1;
-			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
-			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				MineCollection = true;
-			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				SawbladeCollection = true;
+			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
+				GrenadeCollection = true;
 		}
 		
 		AMyMine* Mine = Cast<AMyMine>(OtherActor);
 		if (Mine && (Mine->MineActivated == true)) {
 			if (!ShieldActivated)
 			{
-
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Mine->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
 				Mine->Destroy();
 			}
 			
+		}
+
+		AMyGrenade* Grenade = Cast<AMyGrenade>(OtherActor);
+		if (Grenade && (Grenade->GrenadeActivated == true)) {
+			if (!ShieldActivated)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
+				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+
+				Grenade->Destroy();
+			}
+
 		}
 
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
@@ -1271,12 +1336,14 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 3 + 1;
-			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
-			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				MineCollection = true;
-			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				SawbladeCollection = true;
+			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
+				GrenadeCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
 		}
@@ -1285,11 +1352,23 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		if (Mine && (Mine->MineActivated == true)) {
 			if (!ShieldActivated)
 			{
-
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Mine->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
 				Mine->Destroy();
 			}
 			
+		}
+
+		AMyGrenade* Grenade = Cast<AMyGrenade>(OtherActor);
+		if (Grenade && (Grenade->GrenadeActivated == true)) {
+			if (!ShieldActivated)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
+				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+
+				Grenade->Destroy();
+			}
+
 		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
@@ -1363,12 +1442,14 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 3 + 1;
-			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			int i = rand() % 4;
+			if (i == 1 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				ShieldCollection = true;
-			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			else if (i == 2 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				MineCollection = true;
-			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false)
+			else if (i == 3 &&ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
+				GrenadeCollection = true;
+            else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				SawbladeCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
@@ -1377,11 +1458,23 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		if (Mine && (Mine->MineActivated == true)) {
 			if (!ShieldActivated)
 			{
-
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Mine->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
 				Mine->Destroy();
 			}
 		
+		}
+
+		AMyGrenade* Grenade = Cast<AMyGrenade>(OtherActor);
+		if (Grenade && (Grenade->GrenadeActivated == true)) {
+			if (!ShieldActivated)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
+				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+
+				Grenade->Destroy();
+			}
+
 		}
 		AWallActor* actor = Cast<AWallActor>(OtherActor);
 		if (actor) {
