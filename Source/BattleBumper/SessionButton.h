@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/Button.h"
-#include "MenuLevelScript.h"
+#include "MyLevelScriptActor.h"
 #include "SessionButton.generated.h"
 
 /**

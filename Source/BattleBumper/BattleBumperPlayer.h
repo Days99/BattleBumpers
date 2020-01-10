@@ -27,6 +27,9 @@ public:
 		bool ShieldCollection = false;
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+		bool SawbladeCollection = false;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 		bool MineCollection = false;
 
 	UPROPERTY(Replicated, EditAnywhere)
@@ -179,6 +182,9 @@ public:
 
 	class APlayerController* controller;
 
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class ASawbladeActor> sawblade;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ABattleBumperPlayer* playerAssasin;
 
@@ -229,10 +235,16 @@ public:
 	void SpawnMine(ABattleBumperPlayer* a);
 	UFUNCTION(Server, Reliable,WithValidation)
 		void Server_SpawnMine(ABattleBumperPlayer* a);
+	UFUNCTION(NetMulticast, Reliable)
+		void SpawnSawblade(ABattleBumperPlayer* a);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void Server_SpawnSawblade(ABattleBumperPlayer* a);
 
 	UPROPERTY(BlueprintReadWrite)
 	bool winner;
 
+
+	void DestroySawblade();
 	void DestroyShield();
 	void ActivateItem();
 	void ActivateShield();
@@ -271,6 +283,12 @@ public:
 	UFUNCTION()
 		void OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
+	FTimerHandle SawbladeTime;
+
+	AActor* sawbladeActor;
+
+	bool sawbladeActive;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* myMesh;
 	UPROPERTY(EditAnywhere)

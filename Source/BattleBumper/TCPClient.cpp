@@ -2,18 +2,15 @@
 
 
 #include "TCPClient.h"
-#include "MenuLevelScript.h"
+#include "MyLevelScriptActor.h"
 #include "Sockets.h"
-#include "SocketSubsystem.h"
-#include "IPv4Address.h"
-#include "IPAddress.h"
-#include "RunnableThread.h"
+#include "Interfaces/IPv4/IPv4Address.h"
 
-TCPClient::TCPClient(AMenuLevelScript* Level)
+TCPClient::TCPClient(AMyLevelScriptActor *gLevel)
 {
-	Thread = FRunnableThread::Create(this, TEXT("TCP Client Thread"), 0, TPri_Normal);
-	GameLevel = Level;
-
+	Thread = FRunnableThread::Create(this, TEXT("TCPClientThread"),
+		0, TPri_Normal);
+	GameLevel = gLevel;
 }
 
 TCPClient::~TCPClient()
@@ -24,29 +21,74 @@ TCPClient::~TCPClient()
 
 bool TCPClient::Init()
 {
-	Socket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("Default"), false);
-	int newSize = 0;
-	Socket->SetReceiveBufferSize(1024, newSize);
-	FIPv4Address MathmackingServerIP(127, 0, 0, 1);
-	TSharedRef<FInternetAddr> MatchmackingServer = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+	Socket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->
+		CreateSocket(NAME_Stream, TEXT("default"), false);
+	int NewSize = 0;
+	Socket->SetReceiveBufferSize(1024, NewSize);
+	FIPv4Address MatchmakingServerIP(127, 0, 0, 1);
+	TSharedRef<FInternetAddr> MatchmakingServer = ISocketSubsystem::
+		Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+	MatchmakingServer->SetIp(MatchmakingServerIP.Value);
+	MatchmakingServer->SetPort(8856);
 
-	MatchmackingServer->SetIp(MathmackingServerIP.Value);
-	MatchmackingServer->SetPort(8856);
+	connected = Socket->Connect(*MatchmakingServer);
 
-	connected = Socket->Connect(*MatchmackingServer);
-	if (connected) {
-		UE_LOG(LogTemp, Log, TEXT("Connected"));
+	if (connected)
+	{
+		UE_LOG(LogTemp, Log, TEXT("CONNECTED!!!!"));
+		FString message = TEXT("g|#");
+		TCHAR* convertedMessage = message.GetCharArray().GetData();
+		int32 size = FCString::Strlen(convertedMessage);
+		int32 sent = 0;
+		bool success = Socket->Send((uint8*)TCHAR_TO_UTF8(convertedMessage), 
+			size, sent);
+		if (success)
+		{
+			UE_LOG(LogTemp, Log, TEXT("MESSAGE SENT!!!!"));
+			return true;
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("MESSAGE NOT SENT!!!!"));
+			return false;
+		}
 	}
-	return true;
+	return false;
 }
 
 uint32 TCPClient::Run()
 {
+	running = true;
+	TArray<uint8> ReceivedData;
+	GameLevel->UpdateSessionList("s|null|");
 	while (running)
 	{
+		uint32 size = 0;
+		if (Socket->HasPendingData(size))
+		{
+			ReceivedData.Init(0, size);
+			int32 readsize = 0;
+			Socket->Recv(ReceivedData.GetData(), ReceivedData.Num(), readsize);
+			FString ServerMessage = FString(UTF8_TO_TCHAR(ReceivedData.GetData()));
+			UE_LOG(LogTemp, Log, TEXT("RECEIVED: %s"), *ServerMessage);
+			if (ServerMessage[0] == 's')
+			{
+				//UPDATE SESSION LIST
+				GameLevel->UpdateSessionList(ServerMessage);
+			}
+			else if (ServerMessage[0] == 'o')
+			{
+				//HOST SESSION
+				running = false;
+				TArray<FString> Out;
+				ServerMessage.ParseIntoArray(Out, TEXT("|"), true);
+				GameLevel->StartGameHost(FCString::Atoi(*Out[1]));				
+			}
 
-	} 
-	return uint32();
+		}
+	}
+	UE_LOG(LogTemp, Log, TEXT("THREAD ENDED!!!!!!!!"));
+	return 0;
 }
 
 void TCPClient::Stop()
@@ -57,4 +99,38 @@ void TCPClient::Stop()
 bool TCPClient::IsConnected()
 {
 	return connected;
+}
+
+void TCPClient::HostNewGame(FString sname, FString sport)
+{
+	//h|SESSION_NAME|SESSION_IP|SESSION_PORT|#
+	bool canBind = false;
+	TSharedRef<FInternetAddr> localip = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)
+		->GetLocalHostAddr(*GLog, canBind);
+	if (localip->IsValid())
+	{
+		FString message = TEXT("h|" + sname + "|" + localip->ToString(false) + "|" + sport+ "|#");
+		TCHAR* convertedMessage = message.GetCharArray().GetData();
+		int32 size = FCString::Strlen(convertedMessage);
+		int32 sent = 0;
+		bool success = Socket->Send((uint8*)TCHAR_TO_UTF8(convertedMessage), size, sent);
+		if (success)
+		{
+			UE_LOG(LogTemp, Log, TEXT("MESSAGE SENT!!!!"));
+		}
+	}
+}
+
+void TCPClient::RequestSessionList()
+{
+	FString message = TEXT("g|#");
+	TCHAR* convertedMessage = message.GetCharArray().GetData();
+	int32 size = FCString::Strlen(convertedMessage);
+	int32 sent = 0;
+	bool success = Socket->Send((uint8*)TCHAR_TO_UTF8(convertedMessage),
+		size, sent);
+	if (success)
+	{
+		UE_LOG(LogTemp, Log, TEXT("MESSAGE SENT!!!!"));
+	}
 }
