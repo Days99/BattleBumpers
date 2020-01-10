@@ -404,7 +404,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				if (difference < 1)
 					NewRotation.Pitch = GroundRotation.Pitch;
 			}
-			else if (NewRotation.Pitch > -30 && Grounded == 0)
+			else if (NewRotation.Pitch > -45 && Grounded == 0)
 				NewRotation.Pitch -= (30 + (30 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
 
 			FRotator Crotation = GetActorRotation();
