@@ -947,21 +947,6 @@ void ABattleBumperPlayer::SpawnMine_Implementation(ABattleBumperPlayer* a)
 
 void ABattleBumperPlayer::Server_SpawnMine_Implementation(ABattleBumperPlayer* a)
 {
-		if (ToSpawn)
-		{
-			UWorld* world = a->GetWorld();
-			if (world)
-			{
-				FActorSpawnParameters SpawParams;
-				SpawParams.Owner = a;
-
-				FRotator rotator;
-
-				FVector spawnLocation = a->GetActorLocation() - GetActorUpVector() * 150;
-
-				world->SpawnActor<AMyMine>(ToSpawn, spawnLocation, rotator, SpawParams);
-			}
-		}
 		SpawnMine(a);
 	
 }
