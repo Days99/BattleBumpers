@@ -406,7 +406,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 					NewRotation.Pitch = GroundRotation.Pitch;
 			}
 			else if (NewRotation.Pitch > -45 && Grounded == 0)
-				NewRotation.Pitch -= (30 + (30 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
+				NewRotation.Pitch -= (20 + (30 * CurrentVelocity.X / maxVelocityX)) * DeltaTime;
 
 			FRotator Crotation = GetActorRotation();
 
@@ -1123,8 +1123,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 3 + 1;
+			int i = rand() % 4 + 1;
 			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
 			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
@@ -1229,8 +1228,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 3 + 1;
+			int i = rand() % 4 + 1;
 			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
 			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
@@ -1335,7 +1333,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 3 + 1;
+			int i = rand() % 4 + 1;
 			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
 			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
@@ -1442,7 +1440,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 4;
+			int i = rand() % 4 + 1;
 			if (i == 1 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				ShieldCollection = true;
 			else if (i == 2 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)

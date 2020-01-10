@@ -246,6 +246,7 @@ public:
 		void SpawnSawblade(ABattleBumperPlayer* a);
 	UFUNCTION(Server, Reliable, WithValidation)
 		void Server_SpawnSawblade(ABattleBumperPlayer* a);
+
 	UFUNCTION(NetMulticast, Reliable)
 		void SpawnGrenade(ABattleBumperPlayer* a);
 	UFUNCTION(Server, Reliable, WithValidation)
