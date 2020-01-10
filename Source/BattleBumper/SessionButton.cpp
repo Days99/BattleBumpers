@@ -9,7 +9,13 @@ USessionButton::USessionButton() {
 }
 void USessionButton::OnClick()
 {
-	//JOIN SESSION
+	APlayerController* pController = GetOuter()->GetWorld()->GetFirstPlayerController();
+	if (pController)
+	{
+		FString cmd = "open " + this->sessionInfo->serverip + ":" +
+			FString::FromInt(this->sessionInfo->serverport);
+		pController->ConsoleCommand(cmd);
+	}
 }
 
 void USessionButton::SetSessionInfo(FSessionInfo* sinfo)

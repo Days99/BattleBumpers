@@ -26,6 +26,7 @@
 #include "MyRespawnActor.h"
 #include "MyMine.h"
 #include "MyGrenade.h"
+#include "SawbladeActor.h"
 
 
 // Sets default values
@@ -63,6 +64,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	UnderBoostLeft->SetTemplate(PSU.Object);
 	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
 
+
 	bReplicates = true;
 	SetReplicateMovement(true);
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
@@ -78,7 +80,8 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	Car2 = Car2Asset.Object;
 
 
-	
+	myMesh->SetStaticMesh(Car1);
+
 
 	//ServerMovement = CreateDefaultSubobject<UCharacterMovementComponent>(TEXT("ServerMovement"));
 
@@ -434,7 +437,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 
 			if (Grounded <= 0) {
-				NewLocation += (GetActorUpVector() * -300 * g) * DeltaTime;
+				NewLocation += (GetActorUpVector() * -700 * g) * DeltaTime;
 				if(!WasHit && !ShieldCollision && !MineCollisions && !HitWorld && !respawning)
 				g += 0.01;
 			}
@@ -608,11 +611,11 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 void ABattleBumperPlayer::Reset()
 {
 	respawning = true;
-	SetActorLocation(RespawnPosition);
 	Lives = 3;
 	CurrentDamage = 0;
 	CurrentVelocity.X = 0;
 	ServerVelocity.X = 0;
+	SetActorLocation(RespawnPosition);
 	GetWorld()->GetTimerManager().SetTimer(respawningTime, this, &ABattleBumperPlayer::Respawn, 4.0f, false);
 }
 
@@ -871,6 +874,88 @@ bool ABattleBumperPlayer::Server_SpawnGrenade_Validate(ABattleBumperPlayer* a)
 	return true;
 }
 
+void ABattleBumperPlayer::SpawnSawblade_Implementation(ABattleBumperPlayer* a)
+{
+	if (sawblade)
+	{
+		UWorld* world = a->GetWorld();
+		if (world)
+		{
+			//if (!sawbladeActive) {
+				FActorSpawnParameters SpawParams;
+				SpawParams.Owner = a;
+
+				FRotator rotator = a->GetActorRotation();
+				//	rotator.Pitch += 180;
+
+
+				FVector spawnLocation = a->GetActorLocation() + a->GetActorForwardVector() * 140;
+
+				ASawbladeActor* spawnedBlade = world->SpawnActor<ASawbladeActor>(sawblade, spawnLocation, rotator, SpawParams);
+
+				sawbladeActor = spawnedBlade;
+
+				EAttachmentRule rule = EAttachmentRule::SnapToTarget;
+
+				FAttachmentTransformRules rules = FAttachmentTransformRules(rule, true);
+
+				spawnedBlade->AttachToActor(a, rules);
+				spawnedBlade->SetActorLocationAndRotation(spawnLocation, rotator, true);
+				GetWorld()->GetTimerManager().SetTimer(SawbladeTime, this, &ABattleBumperPlayer::DestroySawblade, 10.0f, false);
+	/*		}
+			else {
+				GetWorldTimerManager().ClearTimer(SawbladeTime);
+
+			}*/
+		}
+	}
+
+}
+void ABattleBumperPlayer::Server_SpawnSawblade_Implementation(ABattleBumperPlayer* a)
+{
+	if (sawblade)
+	{
+		UWorld* world = a->GetWorld();
+		if (world)
+		{
+
+				FActorSpawnParameters SpawParams;
+				SpawParams.Owner = a;
+
+				FRotator rotator = a->GetActorRotation();
+				//	rotator.Pitch += 180;
+
+
+				FVector spawnLocation = a->GetActorLocation() + a->GetActorForwardVector() * 140;
+
+				ASawbladeActor* spawnedBlade = world->SpawnActor<ASawbladeActor>(sawblade, spawnLocation, rotator, SpawParams);
+
+				sawbladeActor = spawnedBlade;
+
+				EAttachmentRule rule = EAttachmentRule::SnapToTarget;
+
+				FAttachmentTransformRules rules = FAttachmentTransformRules(rule, true);
+
+				spawnedBlade->AttachToActor(a, rules);
+				spawnedBlade->SetActorLocationAndRotation(spawnLocation, rotator, true);
+				GetWorld()->GetTimerManager().SetTimer(SawbladeTime, this, &ABattleBumperPlayer::DestroySawblade, 10.0f, false);
+			//}
+			//else {
+			//	GetWorldTimerManager().ClearTimer(SawbladeTime);
+
+			//}
+		}
+	}
+	SpawnSawblade(a);
+
+}
+
+
+bool ABattleBumperPlayer::Server_SpawnSawblade_Validate(ABattleBumperPlayer* a)
+{
+	return true;
+}
+
 void ABattleBumperPlayer::SpawnMine_Implementation(ABattleBumperPlayer* a)
 {
 	if (ToSpawn)
@@ -900,6 +985,13 @@ bool ABattleBumperPlayer::Server_SpawnMine_Validate(ABattleBumperPlayer* a)
 	return true;
 }
 
+void ABattleBumperPlayer::DestroySawblade()
+{
+	sawbladeActor->Destroy();
+	GetWorldTimerManager().ClearTimer(SawbladeTime);
+
+}
+
 void ABattleBumperPlayer::DestroyShield()
 {
 	ShieldMesh->SetVisibility(false);
@@ -925,6 +1017,11 @@ void ABattleBumperPlayer::ActivateItem()
 	{
 		Server_SpawnGrenade(this);
 		GrenadeCollection = false;
+	}
+	if (SawbladeCollection == true) {
+		Server_SpawnSawblade(this);
+		SawbladeCollection = false;
+		sawbladeActive = true;
 	}
 	
 
@@ -1026,12 +1123,15 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 3;
-			if (i == 1 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+		if (Item && (Item->PlayerCollided == false)) {
+			int i = rand() % 3 + 1;
+			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
-			else if (i == 2 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				MineCollection = true;
-			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
+				SawbladeCollection = true;
+			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				GrenadeCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
@@ -1129,15 +1229,16 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 3;
-			if (i == 1 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+		if (Item && (Item->PlayerCollided == false)) {
+			int i = rand() % 3 + 1;
+			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
-			else if (i == 2 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				MineCollection = true;
-			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
+				SawbladeCollection = true;
+			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				GrenadeCollection = true;
-			Item->PlayerCollided = true;
-			Item->TimerFunc();
 		}
 		
 		AMyMine* Mine = Cast<AMyMine>(OtherActor);
@@ -1234,12 +1335,14 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 3;
-			if (i == 1 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			int i = rand() % 3 + 1;
+			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
-			else if (i == 2 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				MineCollection = true;
-			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			else if (i == 3 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
+				SawbladeCollection = true;
+			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				GrenadeCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
@@ -1339,13 +1442,15 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
-			int i = rand() % 3;
-			if (i == 1 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			int i = rand() % 4;
+			if (i == 1 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				ShieldCollection = true;
-			else if (i == 2 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			else if (i == 2 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				MineCollection = true;
-			else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false)
+			else if (i == 3 &&ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				GrenadeCollection = true;
+            else if (ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
+				SawbladeCollection = true;
 			Item->PlayerCollided = true;
 			Item->TimerFunc();
 		}
@@ -1525,10 +1630,11 @@ void ABattleBumperPlayer::OnOverlapBeginGround(class UPrimitiveComponent* Overla
 
 		if (deathactor) {
 			respawning = true;
-			SetActorLocation(RespawnPosition);
 			CurrentVelocity.X = 0;
 			ServerVelocity.X = 0;
 			Lives -= 1;
+			g = 1;
+			SetActorLocation(RespawnPosition);
 			if (Lives == 0) {	
 				if (controller) {
 					gameInstance->RemovePlayer(this);

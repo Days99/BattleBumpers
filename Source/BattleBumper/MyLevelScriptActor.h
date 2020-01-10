@@ -6,56 +6,55 @@
 #include "Engine/LevelScriptActor.h"
 #include "Components/ScrollBox.h"
 #include "TCPClient.h"
-#include "MenuLevelScript.generated.h"
+#include "MyLevelScriptActor.generated.h"
+
 
 USTRUCT()
 struct FSessionInfo {
 	GENERATED_BODY()
 
-		UPROPERTY()
-		int id;
-
 	UPROPERTY()
-		FString name;
-
+	int id;
 	UPROPERTY()
-		FString serverip;
-
+	FString name;
 	UPROPERTY()
-		int serverport;
+	FString serverip;
+	UPROPERTY()
+	int serverport;
 };
 
 UCLASS()
-class BATTLEBUMPER_API AMenuLevelScript : public ALevelScriptActor
+class BATTLEBUMPER_API AMyLevelScriptActor : public ALevelScriptActor
 {
 	GENERATED_BODY()
 
+
 protected:
 	virtual void BeginPlay() override;
+	
+	TArray<FSessionInfo*> *sessionList;
 
-	TCPClient* TCPclienty;
-
-	TArray<FSessionInfo*>* sessionList;
+	TCPClient *tcpClient;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
-		TSubclassOf<class UUserWidget> MatchmakingWidgetClass;
-	UUserWidget* MatchmakingWidget;
-	UScrollBox* sessionListScrollBox;
+	TSubclassOf<class UUserWidget> MatchmakingWidgetClass;
+	UUserWidget *MatchmakingWidget;
+	UScrollBox *sessionListScrollBox;
 	FTimerHandle serverListTimerHandler;
 
+	UFUNCTION()
+	void OnUpdateServerList();
+	UFUNCTION()
+	void OnConnectClicked();
+	UFUNCTION()
+	void OnHostClicked();
+
+	bool hosting;
 	bool readyToHost;
 	int hostPort;
-	bool readyToUpdateList;
-
-	UFUNCTION()
-		void OnUpdateServerList();
-
-	UFUNCTION()
-		void OnConnectClicked();
-	UFUNCTION()
-		void OnHostClicked();
 
 public:
 	void UpdateSessionList(FString serverinfo);
 	void StartGameHost(int port);
+	
 };
