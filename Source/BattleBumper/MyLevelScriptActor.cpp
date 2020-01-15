@@ -72,7 +72,8 @@ void AMyLevelScriptActor::OnUpdateServerList()
 				APlayerController* pController = GetWorld()->GetFirstPlayerController();
 				if (pController)
 				{
-					pController->ConsoleCommand("open LevelDias?listen");
+					FString comand = "open 40.113.114.149:" + FString::FromInt(hostPort);
+					pController->ConsoleCommand(comand);
 				}
 			}
 		}

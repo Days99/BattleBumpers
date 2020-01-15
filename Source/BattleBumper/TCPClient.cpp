@@ -25,9 +25,8 @@ bool TCPClient::Init()
 		CreateSocket(NAME_Stream, TEXT("default"), false);
 	int NewSize = 0;
 	Socket->SetReceiveBufferSize(1024, NewSize);
-	FIPv4Address MatchmakingServerIP(127, 0, 0, 1);
-	TSharedRef<FInternetAddr> MatchmakingServer = ISocketSubsystem::
-		Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+	FIPv4Address MatchmakingServerIP(40,113,114,149);
+	TSharedRef<FInternetAddr>MatchmakingServer = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
 	MatchmakingServer->SetIp(MatchmakingServerIP.Value);
 	MatchmakingServer->SetPort(8856);
 
@@ -105,11 +104,8 @@ void TCPClient::HostNewGame(FString sname, FString sport)
 {
 	//h|SESSION_NAME|SESSION_IP|SESSION_PORT|#
 	bool canBind = false;
-	TSharedRef<FInternetAddr> localip = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)
-		->GetLocalHostAddr(*GLog, canBind);
-	if (localip->IsValid())
-	{
-		FString message = TEXT("h|" + sname + "|" + localip->ToString(false) + "|" + sport+ "|#");
+
+		FString message = TEXT("h|" + sname + "|" + "40.113.114.149" + "|" + sport+ "|#");
 		TCHAR* convertedMessage = message.GetCharArray().GetData();
 		int32 size = FCString::Strlen(convertedMessage);
 		int32 sent = 0;
@@ -118,7 +114,7 @@ void TCPClient::HostNewGame(FString sname, FString sport)
 		{
 			UE_LOG(LogTemp, Log, TEXT("MESSAGE SENT!!!!"));
 		}
-	}
+
 }
 
 void TCPClient::RequestSessionList()
