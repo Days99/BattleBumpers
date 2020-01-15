@@ -3,6 +3,7 @@
 #include "MyGrenade.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AMyGrenade::AMyGrenade()
@@ -13,6 +14,7 @@ AMyGrenade::AMyGrenade()
 	
 	RootComponent = anotherMesh;
 	myMesh->SetupAttachment(RootComponent);
+	GrenadeActivated = true;
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -22,21 +24,23 @@ void AMyGrenade::BeginPlay()
 {
 	
 	Super::BeginPlay();
+
 	anotherMesh->SetPhysMaterialOverride(PhysMat);
-	GrenadeActivated = false;
-	GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &AMyGrenade::ActivateGrenade, 0.5f, false);
-	anotherMesh->AddImpulse(GetActorForwardVector() * 60000, NAME_None, false);
+	
+	GetWorld()->GetTimerManager().SetTimer(DelayTimer, this, &AMyGrenade::ActivateGrenade, 3.0f, false);
+	anotherMesh->AddImpulse(GetActorForwardVector() * 400000, NAME_None, false);
 
 }
 
 // Called every frame
 void AMyGrenade::Tick(float DeltaTime)
 {	
-	
+
 	Super::Tick(DeltaTime);
 }
 
-void  AMyGrenade::ActivateGrenade()
+void AMyGrenade::ActivateGrenade()
 {
-	GrenadeActivated = true;
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+	Destroy();
 }
