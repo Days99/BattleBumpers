@@ -21,6 +21,9 @@ public:
 	class UStaticMeshComponent* anotherMesh;
 
 	UPROPERTY(EditAnywhere)
+		UParticleSystem* ExplosionEffect;
+
+	UPROPERTY(EditAnywhere)
 	UPhysicalMaterial* PhysMat;
 
 	UPROPERTY(EditAnywhere)
