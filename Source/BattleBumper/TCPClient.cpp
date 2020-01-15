@@ -59,7 +59,7 @@ uint32 TCPClient::Run()
 {
 	running = true;
 	TArray<uint8> ReceivedData;
-	GameLevel->UpdateSessionList("s|null|");
+	//GameLevel->UpdateSessionList("s|null|");
 	while (running)
 	{
 		uint32 size = 0;
@@ -72,8 +72,12 @@ uint32 TCPClient::Run()
 			UE_LOG(LogTemp, Log, TEXT("RECEIVED: %s"), *ServerMessage);
 			if (ServerMessage[0] == 's')
 			{
-				//UPDATE SESSION LIST
-				GameLevel->UpdateSessionList(ServerMessage);
+				//if (ServerMessage.Len() > 3) {
+				//	running = false;
+				//	TArray<FString> Out;
+				//	ServerMessage.ParseIntoArray(Out, TEXT("|"), true);
+				//	GameLevel->StartGameHost(FCString::Atoi(*Out[1]));
+				//}
 			}
 			else if (ServerMessage[0] == 'o')
 			{
@@ -100,12 +104,12 @@ bool TCPClient::IsConnected()
 	return connected;
 }
 
-void TCPClient::HostNewGame(FString sname, FString sport)
+void TCPClient::HostNewGame(FString sname, FString sport, FString numbplayers, FString map)
 {
 	//h|SESSION_NAME|SESSION_IP|SESSION_PORT|#
 	bool canBind = false;
 
-		FString message = TEXT("h|" + sname + "|" + "40.113.114.149" + "|" + sport+ "|#");
+		FString message = TEXT("h|" + sname + "|" + "40.113.114.149" + "|" + sport+ "|" + numbplayers + "|" + map + "|#");
 		TCHAR* convertedMessage = message.GetCharArray().GetData();
 		int32 size = FCString::Strlen(convertedMessage);
 		int32 sent = 0;

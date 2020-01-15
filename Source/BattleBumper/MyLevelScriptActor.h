@@ -36,6 +36,10 @@ protected:
 
 	TCPClient *tcpClient;
 
+	UPROPERTY(BlueprintReadWrite, Category = "GameMode")
+		int NumbOfPlayers;
+	UPROPERTY(BlueprintReadWrite, Category = "GameMode")
+		int Map;
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UUserWidget> MatchmakingWidgetClass;
 	UUserWidget *MatchmakingWidget;
@@ -47,8 +51,11 @@ protected:
 	UFUNCTION()
 	void OnConnectClicked();
 	UFUNCTION()
-	void OnHostClicked();
-
+	void OnHostClicked2();
+	UFUNCTION()
+	void OnHostClicked4();
+	UFUNCTION()
+	void OnHostClicked8();
 	bool hosting;
 	bool readyToHost;
 	int hostPort;

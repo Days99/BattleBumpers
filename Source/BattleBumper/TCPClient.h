@@ -19,7 +19,7 @@ public:
 	virtual uint32 Run();
 	virtual void Stop();
 	bool IsConnected();
-	void HostNewGame(FString sname, FString sport);
+	void HostNewGame(FString sname, FString sport, FString numbplayers, FString map);
 	void RequestSessionList();
 
 private:

@@ -8,6 +8,8 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/TextBlock.h"
+#include "Components/CheckBox.h"
+
 
 void AMyLevelScriptActor::BeginPlay()
 {
@@ -23,19 +25,61 @@ void AMyLevelScriptActor::BeginPlay()
 		MatchmakingWidget->AddToViewport();
 		UButton *connectButton = Cast<UButton>(MatchmakingWidget->
 			GetWidgetFromName(TEXT("ConnectButton")));
+
+		UButton *TwoPlayerButton = Cast<UButton>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("2PButton")));
+		UButton *FourPlayerButton = Cast<UButton>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("4PButton")));
+		UButton *EightPlayerButton = Cast<UButton>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("8PButton")));
+
+		UCheckBox *checkBox1 = Cast<UCheckBox>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("1MapCheck")));
+		UCheckBox *checkBox2 = Cast<UCheckBox>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("2MapCheck")));
+
+		UTextBlock *LevelBox1 = Cast<UTextBlock>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("TextLevel0")));
+		UTextBlock *LevelBox2 = Cast<UTextBlock>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("TextLevel1")));
+
+		if (LevelBox1) {
+			LevelBox1->SetVisibility(ESlateVisibility::Hidden);
+		}
+		if (LevelBox2) {
+			LevelBox2->SetVisibility(ESlateVisibility::Hidden);
+		}
+
+
+		if (checkBox1) {
+			checkBox1->SetVisibility(ESlateVisibility::Hidden);
+		}
+		if (checkBox2) {
+			checkBox2->SetVisibility(ESlateVisibility::Hidden);
+		}
+
+		if (TwoPlayerButton) {
+			TwoPlayerButton->SetVisibility(ESlateVisibility::Hidden);
+			TwoPlayerButton->OnClicked.AddDynamic(this,
+				&AMyLevelScriptActor::OnHostClicked2);
+		}
+		if (FourPlayerButton) {
+			FourPlayerButton->SetVisibility(ESlateVisibility::Hidden);
+			FourPlayerButton->OnClicked.AddDynamic(this,
+				&AMyLevelScriptActor::OnHostClicked4);
+		}
+		if (EightPlayerButton) {
+			EightPlayerButton->SetVisibility(ESlateVisibility::Hidden);
+			EightPlayerButton->OnClicked.AddDynamic(this,
+				&AMyLevelScriptActor::OnHostClicked8);
+		}
 		if (connectButton)
 		{
 			connectButton->OnClicked.AddDynamic(this, 
 				&AMyLevelScriptActor::OnConnectClicked);
 		}
-		UButton *hostButton = Cast<UButton>(MatchmakingWidget->
-			GetWidgetFromName(TEXT("HostButton")));
-		if (hostButton)
-		{
-			hostButton->SetIsEnabled(false);
-			hostButton->OnClicked.AddDynamic(this,
-				&AMyLevelScriptActor::OnHostClicked);
-		}
+
+
 		sessionListScrollBox = Cast<UScrollBox>(MatchmakingWidget->
 			GetWidgetFromName(TEXT("MyScrollBox")));
 		APlayerController *pController = GetWorld()->GetFirstPlayerController();
@@ -58,15 +102,56 @@ void AMyLevelScriptActor::OnUpdateServerList()
 				GetWidgetFromName(TEXT("ConnectButton")));
 			if (connectButton)
 			{
-				connectButton->SetIsEnabled(false);
+				connectButton->SetVisibility(ESlateVisibility::Hidden);
 			}
-			UButton *hostButton = Cast<UButton>(MatchmakingWidget->
-				GetWidgetFromName(TEXT("HostButton")));
-			if (hostButton)
-			{
-				hostButton->SetIsEnabled(true);
+			UCheckBox *checkBox1 = Cast<UCheckBox>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("1MapCheck")));
+			UCheckBox *checkBox2 = Cast<UCheckBox>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("2MapCheck")));
+
+			UTextBlock *LevelBox1 = Cast<UTextBlock>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("TextLevel0")));
+			UTextBlock *LevelBox2 = Cast<UTextBlock>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("TextLevel1")));
+			if (LevelBox1) {
+				LevelBox1->SetVisibility(ESlateVisibility::Visible);
 			}
-			tcpClient->RequestSessionList();
+			if (LevelBox2) {
+				LevelBox2->SetVisibility(ESlateVisibility::Visible);
+			}
+
+
+			if (checkBox1) {
+				checkBox1->SetVisibility(ESlateVisibility::Visible);
+			}
+			if (checkBox2) {
+				checkBox2->SetVisibility(ESlateVisibility::Visible);
+			}
+
+
+			if (checkBox1->IsChecked()) {
+				checkBox2->SetCheckedState(ECheckBoxState::Unchecked);
+				Map = 0;
+			}
+			if (checkBox2->IsChecked()) {
+				checkBox1->SetCheckedState(ECheckBoxState::Unchecked);
+				Map = 1;
+			}
+			UButton *TwoPlayerButton = Cast<UButton>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("2PButton")));
+			UButton *FourPlayerButton = Cast<UButton>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("4PButton")));
+			UButton *EightPlayerButton = Cast<UButton>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("8PButton")));
+			if (TwoPlayerButton) {
+				TwoPlayerButton->SetVisibility(ESlateVisibility::Visible);
+			}
+			if (FourPlayerButton) {
+				FourPlayerButton->SetVisibility(ESlateVisibility::Visible);
+			}
+			if (EightPlayerButton) {
+				EightPlayerButton->SetVisibility(ESlateVisibility::Visible);
+			}
 			if (readyToHost)
 			{
 				APlayerController* pController = GetWorld()->GetFirstPlayerController();
@@ -111,9 +196,19 @@ void AMyLevelScriptActor::OnConnectClicked()
 	tcpClient = new TCPClient(this);
 }
 
-void AMyLevelScriptActor::OnHostClicked()
+void AMyLevelScriptActor::OnHostClicked2()
 {
-	tcpClient->HostNewGame("My Session", "7777");
+	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(2), FString::FromInt(Map));
+	hosting = true;
+}
+void AMyLevelScriptActor::OnHostClicked4()
+{
+	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(4), FString::FromInt(Map));
+	hosting = true;
+}
+void AMyLevelScriptActor::OnHostClicked8()
+{
+	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(8), FString::FromInt(Map));
 	hosting = true;
 }
 
