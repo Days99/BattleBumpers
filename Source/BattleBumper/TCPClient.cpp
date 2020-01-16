@@ -78,6 +78,8 @@ uint32 TCPClient::Run()
 				//	ServerMessage.ParseIntoArray(Out, TEXT("|"), true);
 				//	GameLevel->StartGameHost(FCString::Atoi(*Out[1]));
 				//}
+
+				GameLevel->JoinSession(ServerMessage);
 			}
 			else if (ServerMessage[0] == 'o')
 			{

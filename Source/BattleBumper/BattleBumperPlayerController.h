@@ -26,5 +26,7 @@ public:
 		void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector NewLocation, FRotator NewRotation, float Velocity, float d, bool handbrake, bool shield);
 
 	ABattleBumperPlayer* pawn;
+
+	int inGameID;
 	
 };

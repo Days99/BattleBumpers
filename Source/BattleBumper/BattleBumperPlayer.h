@@ -188,6 +188,8 @@ public:
 	FVector RespawnPosition;
 
 	class APlayerController* controller;
+	
+	class ABattleBumperPlayerController* MyController;
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class ASawbladeActor> sawblade;
@@ -203,6 +205,8 @@ public:
 	UWorld* World;
 
 	bool positionSet;
+
+	int GenerateID(ABattleBumperPlayer* p);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_ReliableFunctionCallThatRunsOnServer(ABattleBumperPlayer* a, FVector FNewLocation, FRotator FNewRotation, float Velocity, float d, bool handbrake, bool shield, float handbrakeN);

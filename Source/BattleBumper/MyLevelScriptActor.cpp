@@ -9,6 +9,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Components/TextBlock.h"
 #include "Components/CheckBox.h"
+#include "BattleBumperPlayerController.h"
 
 
 void AMyLevelScriptActor::BeginPlay()
@@ -212,30 +213,27 @@ void AMyLevelScriptActor::OnHostClicked8()
 	hosting = true;
 }
 
-void AMyLevelScriptActor::UpdateSessionList(FString serverinfo)
+void AMyLevelScriptActor::JoinSession(FString serverinfo)
 {
 
 		TArray<FString> Out;
 		serverinfo.ParseIntoArray(Out, TEXT("|"), true);
 		if (Out.Num() > 3) {
-			for (int i = 1; i < Out.Num() - 3; i += 4)
+			int port = 0;
+			for (int i = 1; i < Out.Num() - 4; i += 5)
 			{
 				FSessionInfo* sInfo = new FSessionInfo();
 				sInfo->id = FCString::Atoi(*Out[i]);
 				sInfo->name = Out[i + 1];
 				sInfo->serverip = Out[i + 2];
 				sInfo->serverport = FCString::Atoi(*Out[i + 3]);
-				bool sExist = false;
-				for (int j = 0; j < sessionList->Num(); j++)
-				{
-					if ((*sessionList)[j]->id == sInfo->id) {
-						sExist = true;
-					}
-				}
-				if (!sExist) {
-					sessionList->Add(sInfo);
-				}
+				port = sInfo->serverport;
+				ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
+				pController->inGameID = FCString::Atoi(*Out[i + 4]);
 			}
+			
+			StartGameHost(port);
+
 		}
 }
 
@@ -243,4 +241,6 @@ void AMyLevelScriptActor::StartGameHost(int port)
 {
 	hostPort = port;
 	readyToHost = true;
+	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
+	pController->inGameID = 1;
 }

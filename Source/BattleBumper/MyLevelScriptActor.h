@@ -61,7 +61,7 @@ protected:
 	int hostPort;
 
 public:
-	void UpdateSessionList(FString serverinfo);
+	void JoinSession(FString serverinfo);
 	void StartGameHost(int port);
 	
 };

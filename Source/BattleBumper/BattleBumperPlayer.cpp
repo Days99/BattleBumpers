@@ -27,6 +27,7 @@
 #include "MyMine.h"
 #include "MyGrenade.h"
 #include "SawbladeActor.h"
+#include "BattleBumperPlayerController.h"
 
 
 // Sets default values
@@ -63,7 +64,6 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	UnderBoostLeft = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MyPSC6"));
 	UnderBoostLeft->SetTemplate(PSU.Object);
 	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
-
 
 	bReplicates = true;
 	SetReplicateMovement(true);
@@ -172,10 +172,18 @@ void ABattleBumperPlayer::BeginPlay()
 	
 	if (ROLE_Authority) {
 		gameInstance = Cast<UMyGameInstance>(GetGameInstance());
-		id = gameInstance->GenerateID(this);
+	}
+	MyController = Cast<ABattleBumperPlayerController>(GetController());
+
+	if (MyController) {
+		if (MyController->inGameID) {
+			id = MyController->inGameID;
+		}
+		else
+			id = 1;
 	}
 
-	if(id == 0 || id == 2)
+	if(id % 2 == 0 && id != 0)
 		myMesh->SetStaticMesh(Car1);
 	else
 		myMesh->SetStaticMesh(Car2);
@@ -1702,6 +1710,22 @@ void ABattleBumperPlayer::OnOverlapEndGround(class UPrimitiveComponent* Overlapp
 			//}
 		}
 	}
+}
+
+int ABattleBumperPlayer::GenerateID(ABattleBumperPlayer* p)
+{
+
+	TSubclassOf<ABattleBumperPlayer> classToFind;
+	classToFind = ABattleBumperPlayer::StaticClass();
+	TArray<AActor*> foundObjects;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), classToFind, foundObjects);
+
+	int count = 0;
+	for (AActor* pawn : foundObjects) {
+			count++;
+	}
+
+	return count;
 }
 
 void ABattleBumperPlayer::OnOverlapBeginShield(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
