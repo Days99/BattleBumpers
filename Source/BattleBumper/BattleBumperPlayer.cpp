@@ -76,7 +76,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>Car1Asset(TEXT("/Game/Assets/FirstBattleBumper"));
 	Car1 = Car1Asset.Object;
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>Car2Asset(TEXT("/Game/Assets/BattleBumperThinWithTire"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>Car2Asset(TEXT("/Game/Assets/BattleBumperThin"));
 	Car2 = Car2Asset.Object;
 
 
