@@ -28,7 +28,7 @@
 #include "MyGrenade.h"
 #include "SawbladeActor.h"
 #include "BattleBumperPlayerController.h"
-
+#include "time.h" 
 
 // Sets default values
 ABattleBumperPlayer::ABattleBumperPlayer()
@@ -172,18 +172,19 @@ void ABattleBumperPlayer::BeginPlay()
 	
 	if (ROLE_Authority) {
 		gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+		gameInstance->AddPlayer(this);
 	}
-	MyController = Cast<ABattleBumperPlayerController>(GetController());
-
+	MyController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
+	srand(time(0));
 	if (MyController) {
 		if (MyController->inGameID) {
 			id = MyController->inGameID;
 		}
 		else
-			id = 1;
+			id = rand() % 4 + 1;
 	}
 
-	if(id % 2 == 0 && id != 0)
+	if(id % 2 == 0)
 		myMesh->SetStaticMesh(Car1);
 	else
 		myMesh->SetStaticMesh(Car2);
@@ -200,7 +201,12 @@ void ABattleBumperPlayer::BeginPlay()
 		}
 	}
 	Reset();
-	gameInstance->StartGame();
+	if (MyController) {
+		if (MyController->maxNumbP) {
+			if (id == MyController->maxNumbP)
+				gameInstance->StartGame();
+		}
+	}
 	
 
 
@@ -445,9 +451,9 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 			}
 
 			if (Grounded <= 0) {
-				NewLocation += (GetActorUpVector() * -700 * g) * DeltaTime;
-				if(!WasHit && !ShieldCollision && !MineCollisions && !HitWorld && !respawning)
-				g += 0.01;
+				NewLocation += (GetActorUpVector() * -700) * DeltaTime;
+				/*if(!WasHit && !ShieldCollision && !MineCollisions && !HitWorld && !respawning)
+				g += 0.01;*/
 			}
 			float impactStrnght = 0;
 			if (WasHit&&collision==false)
@@ -660,7 +666,6 @@ void ABattleBumperPlayer::Server_ReliableFunctionCallThatRunsOnServer_Implementa
 		a->CurrentVelocity.X = v;
 		//a->ServerVelocity.X = v;
 	//}
-
 	a->ShieldActivated = shield;
 	a->CurrentDamage = d;
 	a->onHandbrake = handbrake;
@@ -1779,7 +1784,7 @@ void ABattleBumperPlayer::CalculateSlopeRotation(){
 	GroundRotation.Pitch = GroundedRotationValue;
 	currentDistanceZ = GetActorLocation().Z - GroundPosition.Z;
 	if (DistanceZ == 0.0f) {
-		DistanceZ = 40;
+		DistanceZ = 45;
 	}
 	if(OnGround)
 	locationZ = DistanceZ - currentDistanceZ;

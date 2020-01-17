@@ -199,16 +199,28 @@ void AMyLevelScriptActor::OnConnectClicked()
 
 void AMyLevelScriptActor::OnHostClicked2()
 {
+	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (pController) {
+		pController->maxNumbP = 2;
+	}
 	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(2), FString::FromInt(Map));
 	hosting = true;
 }
 void AMyLevelScriptActor::OnHostClicked4()
 {
+	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (pController) {
+		pController->maxNumbP = 4;
+	}
 	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(4), FString::FromInt(Map));
 	hosting = true;
 }
 void AMyLevelScriptActor::OnHostClicked8()
 {
+	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (pController) {
+		pController->maxNumbP = 8;
+	}
 	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(8), FString::FromInt(Map));
 	hosting = true;
 }
@@ -218,7 +230,8 @@ void AMyLevelScriptActor::JoinSession(FString serverinfo)
 
 		TArray<FString> Out;
 		serverinfo.ParseIntoArray(Out, TEXT("|"), true);
-		if (Out.Num() > 3) {
+		if (Out.Num() > 4) {
+			int id = 0;
 			int port = 0;
 			for (int i = 1; i < Out.Num() - 4; i += 5)
 			{
@@ -228,11 +241,11 @@ void AMyLevelScriptActor::JoinSession(FString serverinfo)
 				sInfo->serverip = Out[i + 2];
 				sInfo->serverport = FCString::Atoi(*Out[i + 3]);
 				port = sInfo->serverport;
-				ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
-				pController->inGameID = FCString::Atoi(*Out[i + 4]);
-			}
-			
+				id = FCString::Atoi(*Out[i + 4]);
+			}		
 			StartGameHost(port);
+			ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
+			pController->inGameID = id;
 
 		}
 }
@@ -242,5 +255,4 @@ void AMyLevelScriptActor::StartGameHost(int port)
 	hostPort = port;
 	readyToHost = true;
 	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
-	pController->inGameID = 1;
 }

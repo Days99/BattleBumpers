@@ -109,6 +109,20 @@
 //{
 //}
 
+void UMyGameInstance::AddPlayer(ABattleBumperPlayer* p) {
+	int count = 1;
+	for (ABattleBumperPlayer* pawn : players) {
+		if (pawn == p)
+			break;
+		else
+			count++;
+	}
+
+	if (count > players.Num()) {
+		players.Add(p);
+	}
+}
+
 int UMyGameInstance::GenerateID(ABattleBumperPlayer* p)
 {
 	int count = 1;
@@ -156,11 +170,9 @@ void UMyGameInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty, FDefa
 }
 
 void UMyGameInstance::StartGame() {
-	if (players.Num() == maxPlayers) {
 		for (ABattleBumperPlayer* p : players) {
 			p->Reset();
 		}
-	}
 }
 
 ABattleBumperPlayer* UMyGameInstance::GetRandomPlayer()
