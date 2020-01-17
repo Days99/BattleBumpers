@@ -169,16 +169,16 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+	
 	
 	if (ROLE_Authority) {
-		gameInstance = Cast<UMyGameInstance>(GetGameInstance());
 		gameInstance->AddPlayer(this);
 	}
-	MyController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
 	srand(time(0));
-	if (MyController) {
-		if (MyController->inGameID) {
-			id = MyController->inGameID;
+	if (gameInstance) {
+		if (gameInstance->id) {
+			id = gameInstance->id;
 		}
 		else
 			id = rand() % 4 + 1;
@@ -203,9 +203,9 @@ void ABattleBumperPlayer::BeginPlay()
 		}
 	}
 	Reset();
-	if (MyController) {
-		if (MyController->maxNumbP) {
-			if (id == MyController->maxNumbP)
+	if (gameInstance) {
+		if (gameInstance->maxPlayers) {
+			if (id == gameInstance->maxPlayers)
 				gameInstance->StartGame();
 		}
 	}

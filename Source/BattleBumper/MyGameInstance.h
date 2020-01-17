@@ -58,6 +58,9 @@ public:
 	UPROPERTY(Replicated)
 	int maxPlayers;
 
+	UPROPERTY(Replicated)
+	int id;
+
 	void AddPlayer(ABattleBumperPlayer* p);
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")

@@ -9,7 +9,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Components/TextBlock.h"
 #include "Components/CheckBox.h"
-#include "BattleBumperPlayerController.h"
+#include "MyGameInstance.h"
 
 
 void AMyLevelScriptActor::BeginPlay()
@@ -228,28 +228,22 @@ void AMyLevelScriptActor::OnConnectClicked()
 
 void AMyLevelScriptActor::OnHostClicked2()
 {
-	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
-	if (pController) {
-		pController->maxNumbP = 2;
-	}
+	UMyGameInstance* gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+	gameInstance->SetMaxPlayers(2);
 	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(2), FString::FromInt(Map));
 	hosting = true;
 }
 void AMyLevelScriptActor::OnHostClicked4()
 {
-	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
-	if (pController) {
-		pController->maxNumbP = 4;
-	}
+	UMyGameInstance* gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+	gameInstance->SetMaxPlayers(4);
 	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(4), FString::FromInt(Map));
 	hosting = true;
 }
 void AMyLevelScriptActor::OnHostClicked8()
 {
-	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
-	if (pController) {
-		pController->maxNumbP = 8;
-	}
+	UMyGameInstance* gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+	gameInstance->SetMaxPlayers(8);
 	tcpClient->HostNewGame("My Session", "7777", FString::FromInt(8), FString::FromInt(Map));
 	hosting = true;
 }
@@ -273,8 +267,8 @@ void AMyLevelScriptActor::JoinSession(FString serverinfo)
 				id = FCString::Atoi(*Out[i + 4]);
 			}		
 			StartGameHost(port);
-			ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
-			pController->inGameID = id;
+			UMyGameInstance* gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+			gameInstance->id = id;
 
 		}
 }
@@ -283,5 +277,6 @@ void AMyLevelScriptActor::StartGameHost(int port)
 {
 	hostPort = port;
 	readyToHost = true;
-	ABattleBumperPlayerController* pController = Cast<ABattleBumperPlayerController>(GetWorld()->GetFirstPlayerController());
+	UMyGameInstance* gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+	gameInstance->id = 1;
 }
