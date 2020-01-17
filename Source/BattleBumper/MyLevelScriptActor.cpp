@@ -18,7 +18,7 @@ void AMyLevelScriptActor::BeginPlay()
 	readyToHost = false;
 	sessionList = new TArray<FSessionInfo *>();
 	GetWorld()->GetTimerManager().SetTimer(serverListTimerHandler,
-		this, &AMyLevelScriptActor::OnUpdateServerList, 2, true);
+		this, &AMyLevelScriptActor::OnUpdateServerList,0.5f, true);
 	if (MatchmakingWidgetClass)
 	{
 		MatchmakingWidget = CreateWidget<UUserWidget>(GetWorld(), 
@@ -38,17 +38,24 @@ void AMyLevelScriptActor::BeginPlay()
 			GetWidgetFromName(TEXT("1MapCheck")));
 		UCheckBox *checkBox2 = Cast<UCheckBox>(MatchmakingWidget->
 			GetWidgetFromName(TEXT("2MapCheck")));
+		UCheckBox* checkBox3 = Cast<UCheckBox>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("3MapCheck")));
 
 		UTextBlock *LevelBox1 = Cast<UTextBlock>(MatchmakingWidget->
 			GetWidgetFromName(TEXT("TextLevel0")));
 		UTextBlock *LevelBox2 = Cast<UTextBlock>(MatchmakingWidget->
 			GetWidgetFromName(TEXT("TextLevel1")));
+		UTextBlock* LevelBox3 = Cast<UTextBlock>(MatchmakingWidget->
+			GetWidgetFromName(TEXT("TextLevel2")));
 
 		if (LevelBox1) {
 			LevelBox1->SetVisibility(ESlateVisibility::Hidden);
 		}
 		if (LevelBox2) {
 			LevelBox2->SetVisibility(ESlateVisibility::Hidden);
+		}
+		if (LevelBox3) {
+			LevelBox3->SetVisibility(ESlateVisibility::Hidden);
 		}
 
 
@@ -58,6 +65,10 @@ void AMyLevelScriptActor::BeginPlay()
 		if (checkBox2) {
 			checkBox2->SetVisibility(ESlateVisibility::Hidden);
 		}
+		if (checkBox3) {
+			checkBox3->SetVisibility(ESlateVisibility::Hidden);
+		}
+
 
 		if (TwoPlayerButton) {
 			TwoPlayerButton->SetVisibility(ESlateVisibility::Hidden);
@@ -109,16 +120,24 @@ void AMyLevelScriptActor::OnUpdateServerList()
 				GetWidgetFromName(TEXT("1MapCheck")));
 			UCheckBox *checkBox2 = Cast<UCheckBox>(MatchmakingWidget->
 				GetWidgetFromName(TEXT("2MapCheck")));
+			UCheckBox* checkBox3 = Cast<UCheckBox>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("3MapCheck")));
 
 			UTextBlock *LevelBox1 = Cast<UTextBlock>(MatchmakingWidget->
 				GetWidgetFromName(TEXT("TextLevel0")));
 			UTextBlock *LevelBox2 = Cast<UTextBlock>(MatchmakingWidget->
 				GetWidgetFromName(TEXT("TextLevel1")));
+			UTextBlock* LevelBox3 = Cast<UTextBlock>(MatchmakingWidget->
+				GetWidgetFromName(TEXT("TextLevel2")));
+
 			if (LevelBox1) {
 				LevelBox1->SetVisibility(ESlateVisibility::Visible);
 			}
 			if (LevelBox2) {
 				LevelBox2->SetVisibility(ESlateVisibility::Visible);
+			}
+			if (LevelBox3) {
+				LevelBox3->SetVisibility(ESlateVisibility::Visible);
 			}
 
 
@@ -128,15 +147,25 @@ void AMyLevelScriptActor::OnUpdateServerList()
 			if (checkBox2) {
 				checkBox2->SetVisibility(ESlateVisibility::Visible);
 			}
+			if (checkBox3) {
+				checkBox3->SetVisibility(ESlateVisibility::Visible);
+			}
 
 
 			if (checkBox1->IsChecked()) {
 				checkBox2->SetCheckedState(ECheckBoxState::Unchecked);
+				checkBox3->SetCheckedState(ECheckBoxState::Unchecked);
 				Map = 0;
 			}
 			if (checkBox2->IsChecked()) {
 				checkBox1->SetCheckedState(ECheckBoxState::Unchecked);
+				checkBox3->SetCheckedState(ECheckBoxState::Unchecked);
 				Map = 1;
+			}
+			if (checkBox3->IsChecked()) {
+				checkBox1->SetCheckedState(ECheckBoxState::Unchecked);
+				checkBox2->SetCheckedState(ECheckBoxState::Unchecked);
+				Map = 2;
 			}
 			UButton *TwoPlayerButton = Cast<UButton>(MatchmakingWidget->
 				GetWidgetFromName(TEXT("2PButton")));
