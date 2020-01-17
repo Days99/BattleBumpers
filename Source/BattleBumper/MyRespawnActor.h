@@ -26,4 +26,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	int id;
 
+	UPROPERTY(EditAnywhere)
+	bool used;
+
 };

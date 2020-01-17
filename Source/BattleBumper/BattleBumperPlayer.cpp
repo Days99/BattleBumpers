@@ -196,8 +196,9 @@ void ABattleBumperPlayer::BeginPlay()
 
 	for (AActor* a : foundObjects) {
 		AMyRespawnActor* respawn = Cast<AMyRespawnActor>(a);
-		if (respawn && respawn->id == id) {
+		if (respawn && respawn->id == id && !respawn->used) {
 			RespawnPosition = respawn->GetActorLocation();
+			respawn->used = true;
 		}
 	}
 	Reset();
