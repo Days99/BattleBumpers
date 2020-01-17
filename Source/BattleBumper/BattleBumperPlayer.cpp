@@ -1162,7 +1162,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		}
 
 		AMyGrenade* Grenade = Cast<AMyGrenade>(OtherActor);
-		if (Grenade && (Grenade->GrenadeActivated == true)) {
+		if (Grenade) {
 			if (!ShieldActivated)
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
@@ -1264,7 +1264,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		}
 
 		AMyGrenade* Grenade = Cast<AMyGrenade>(OtherActor);
-		if (Grenade && (Grenade->GrenadeActivated == true)) {
+		if (Grenade ) {
 			if (!ShieldActivated)
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
@@ -1371,7 +1371,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		}
 
 		AMyGrenade* Grenade = Cast<AMyGrenade>(OtherActor);
-		if (Grenade && (Grenade->GrenadeActivated == true)) {
+		if (Grenade) {
 			if (!ShieldActivated)
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
@@ -1477,7 +1477,7 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		}
 
 		AMyGrenade* Grenade = Cast<AMyGrenade>(OtherActor);
-		if (Grenade && (Grenade->GrenadeActivated == true)) {
+		if (Grenade) {
 			if (!ShieldActivated)
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
