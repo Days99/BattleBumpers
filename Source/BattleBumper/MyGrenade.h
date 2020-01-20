@@ -2,6 +2,7 @@
 
 #pragma once
 #include "Components/PrimitiveComponent.h"
+#include "Components/AudioComponent.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "MyGrenade.generated.h"
@@ -20,6 +21,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* anotherMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* ExplosionSound;
+
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* ExplosionEffect;
 
@@ -28,6 +32,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		FTimerHandle DelayTimer;
+
+	UPROPERTY(EditAnywhere)
+		FTimerHandle DelayTimerSound;
 
 	UPROPERTY(EditAnywhere)
 		bool GrenadeActivated;
@@ -40,4 +47,5 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void ActivateGrenade();
+	void ActivateSound();
 };

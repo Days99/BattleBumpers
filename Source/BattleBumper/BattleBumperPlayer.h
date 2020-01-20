@@ -9,6 +9,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/CharacterMovementComponent.h" 
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
 #include "BattleBumperPlayer.generated.h"
 
 
@@ -109,6 +111,45 @@ public:
 		UParticleSystem* ExplosionEffect;
 
 
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+	UAudioComponent* ExplosionSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SoundEffect")
+	USoundBase* EngineSoundBase;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+	UAudioComponent* ShieldHitSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+	UAudioComponent* ChainSawSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* EngineSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* ItemGetSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* BoostGetSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* ItemActivateSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* CarBumpWeakSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* CarBumpMediumSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* CarBumpStrongSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* BoostActivateSound;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* BoostFlameSound;
+
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CurrentPosition;
 
@@ -121,6 +162,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		int Lives;
+
+	UPROPERTY(EditAnywhere)
+		int passage = 0;
 
 	UPROPERTY(EditAnywhere)
 		float g;
@@ -205,6 +249,7 @@ public:
 	UWorld* World;
 
 	bool positionSet;
+
 
 	int GenerateID(ABattleBumperPlayer* p);
 
@@ -316,13 +361,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	class UParticleSystemComponent* BoostsLeft;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		class UParticleSystemComponent* NormalBoostRight;
+	class UParticleSystemComponent* NormalBoostRight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		class UParticleSystemComponent* NormalBoostLeft;
+	class UParticleSystemComponent* NormalBoostLeft;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		class UParticleSystemComponent* UnderBoostRight;
+	class UParticleSystemComponent* UnderBoostRight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		class UParticleSystemComponent* UnderBoostLeft;
+	class UParticleSystemComponent* UnderBoostLeft;
 	//Input variables
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector CurrentVelocity;
@@ -333,7 +378,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxVelocityRX = -250;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		float YourVelocityShield;
+	float YourVelocityShield;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float maxAccelaration = 5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")

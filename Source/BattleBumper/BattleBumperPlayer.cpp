@@ -65,6 +65,61 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	UnderBoostLeft->SetTemplate(PSU.Object);
 	//MovementCharacter = CreateDefaultSubobject<UCharacterMovementComponent>((TEXT("Movement")));
 
+	
+
+	
+	//EngineSound->SetSound(EngineSoundBase);
+	EngineSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	EngineSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	CarBumpWeakSound = CreateDefaultSubobject<UAudioComponent>(TEXT("BumpWeakAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	CarBumpWeakSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	CarBumpMediumSound = CreateDefaultSubobject<UAudioComponent>(TEXT("BumpMediumAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	CarBumpMediumSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	CarBumpStrongSound = CreateDefaultSubobject<UAudioComponent>(TEXT("BumpStrongAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	CarBumpStrongSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	BoostActivateSound = CreateDefaultSubobject<UAudioComponent>(TEXT("BoostActivateAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	BoostActivateSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	BoostFlameSound = CreateDefaultSubobject<UAudioComponent>(TEXT("BoostFlameAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	BoostFlameSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	ExplosionSound = CreateDefaultSubobject<UAudioComponent>(TEXT("ExplosionAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	ExplosionSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	ItemActivateSound = CreateDefaultSubobject<UAudioComponent>(TEXT("ItemActivateAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	ItemActivateSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	ItemGetSound = CreateDefaultSubobject<UAudioComponent>(TEXT("ItemGetAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	ItemGetSound->bAutoActivate = false;
+
+	//EngineSound->SetSound(EngineSoundBase);
+	BoostGetSound = CreateDefaultSubobject<UAudioComponent>(TEXT("BoostGetAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	BoostGetSound->bAutoActivate = false;
+
+
+	
 	bReplicates = true;
 	SetReplicateMovement(true);
 	OurCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("OurCollider"));
@@ -114,7 +169,7 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	camera->SetupAttachment(springArm, USpringArmComponent::SocketName);
 
 	
-	
+	passage = 0;
 	GroundCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Ground Capsule"));
 	GroundCapsule->SetupAttachment(RootComponent);
 
@@ -169,6 +224,8 @@ void ABattleBumperPlayer::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 void ABattleBumperPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	
 	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
 	
 	
@@ -262,6 +319,14 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	if (winner) {
 		//controller->DisableInput(controller);
 	}
+	if (CurrentVelocity.X > 0 && !EngineSound->IsPlaying())
+	{
+		EngineSound->Play();
+	}
+	if (CurrentVelocity.X <= 0 && EngineSound->IsPlaying())
+	{
+		EngineSound->Stop();
+	}
 	// Handle growing and shrinking based on our "Grow" action
 	if (collision == true)
 	{
@@ -329,6 +394,7 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 	if (!onHandbrake && !respawning)
 		CurrentVelocity.X += CurrentAcceleration.X;
 	
+
 	if (onHandbrake && CurrentVelocity.X > 0) {
 		if (CurrentVelocity.X < HandbrakeAccelaration) {
 			CurrentVelocity.X = 0;
@@ -376,7 +442,9 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 		CurrentRotation.Yaw = -maxVelocityY * 1.5f;
 	}
 	if (boosted && CurrentVelocity.X < maxVelocityX) {
+		BoostFlameSound->Stop();
 		boosted = false;
+		
 		BoostsRight->DeactivateSystem();
 		BoostsLeft->DeactivateSystem();
 		NormalBoostLeft->ActivateSystem();
@@ -458,28 +526,56 @@ void ABattleBumperPlayer::Tick(float DeltaTime)
 				g += 0.01;*/
 			}
 			float impactStrnght = 0;
+			
+			if (WasHit == false)
+				passage = 0;
+
 			if (WasHit&&collision==false)
 			{
+				
+				
+				
 				impactStrnght = (ImpactStrenght / 500) * (CurrentDamage / 2);
 				if (ImpactStrenght >= 2000 )
 				{
+					if (!CarBumpStrongSound->IsPlaying() && passage <= 0)
+					{
+						CarBumpStrongSound->Play();
+						passage = passage + 1;
+					}
 					NewLocation +=((CollsionVector * ((ImpactStrenght + CurrentDamage) *1.3f))  + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage)/1.3f))) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 50;
 				}
 				else if (ImpactStrenght >= 1500 )
 				{
+					if (!CarBumpMediumSound->IsPlaying() && passage <= 0)
+					{
+						CarBumpMediumSound->Play();
+						passage = passage + 1;
+					}
 					NewLocation += ((CollsionVector * ((ImpactStrenght + CurrentDamage))) + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage) / 1.5f))) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 60;
 				}
 				else if (ImpactStrenght >= 1000)
 				{
+					if (!CarBumpMediumSound->IsPlaying() && passage <= 0)
+					{
+						CarBumpMediumSound->Play();
+						passage = passage + 1;
+					}
 					NewLocation += ((CollsionVector * ((ImpactStrenght + CurrentDamage) * 1.1f)) + (GetActorUpVector() * ((ImpactStrenght + CurrentDamage) / 2))) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 55;
 				}
 				else if (ImpactStrenght < 999)
 				{
+					if (!CarBumpWeakSound->IsPlaying() && passage <= 0)
+					{
+						CarBumpWeakSound->Play();
+						passage = passage + 1;
+					}
 					NewLocation += (CollsionVector * ((ImpactStrenght + CurrentDamage) )) * DeltaTime;
 					NewRotation.Yaw += CollsionVector.Rotation().Yaw / 70;
+					
 				}
 			}
 			if (AddDamage)
@@ -842,12 +938,15 @@ void ABattleBumperPlayer::Handbrake() {
 
 void ABattleBumperPlayer::UseBoost() {
 	if (boost > 0) {
+		if(!BoostActivateSound->IsPlaying())
+		BoostActivateSound->Play();
 		NormalBoostLeft->DeactivateSystem();
 		NormalBoostRight->DeactivateSystem();
 		UnderBoostLeft->ActivateSystem();
 		UnderBoostRight->ActivateSystem();
 		CurrentVelocity.X += 500;
 		if (CurrentVelocity.X > maxVelocityX) {
+			BoostFlameSound->Play();
 			BoostsLeft->ActivateSystem();
 			BoostsRight->ActivateSystem();
 			NormalBoostLeft->DeactivateSystem();
@@ -1017,7 +1116,8 @@ void ABattleBumperPlayer::DestroyShield()
 
 void ABattleBumperPlayer::ActivateItem()
 {
-	
+	if(!ItemActivateSound->IsPlaying())
+	ItemActivateSound->Play();
 	if(ShieldCollection==true)
 	{
 		ActivateShield();
@@ -1139,6 +1239,8 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 4 + 1;
+			if (!ItemGetSound->IsPlaying())
+			ItemGetSound->Play();
 			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
 			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
@@ -1157,7 +1259,8 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Mine->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
-
+				if (!ExplosionSound->IsPlaying())
+				ExplosionSound->Play();
 				Mine->Destroy();
 			}
 			
@@ -1169,7 +1272,8 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
-
+				if (!ExplosionSound->IsPlaying())
+				ExplosionSound->Play();
 				Grenade->Destroy();
 			}
 
@@ -1192,6 +1296,8 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 
 		if (boostActor) {
 			if (boostActor->active) {
+				if (!BoostGetSound->IsPlaying())
+				BoostGetSound->Play();
 				if (boost < 3)
 				boost++;
 				boostActor->OnCollided();
@@ -1204,6 +1310,7 @@ void ABattleBumperPlayer::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
+			passage = 0;
 			if (Role == ROLE_Authority && !respawning)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
 			CollidedActors->playerAssasin = this;	
@@ -1243,6 +1350,8 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		AItemRandomizer* Item = Cast<AItemRandomizer>(OtherActor);
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
+			if (!ItemGetSound->IsPlaying())
+			ItemGetSound->Play();
 			int i = rand() % 4 + 1;
 			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
@@ -1260,6 +1369,8 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Mine->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				if (!ExplosionSound->IsPlaying())
+				ExplosionSound->Play();
 				Mine->Destroy();
 			}
 			
@@ -1271,7 +1382,8 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
-
+				if (!ExplosionSound->IsPlaying())
+				ExplosionSound->Play();
 				Grenade->Destroy();
 			}
 
@@ -1294,6 +1406,8 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 
 		if (boostActor) {
 			if (boostActor->active) {
+				if (!BoostGetSound->IsPlaying())
+					BoostGetSound->Play();
 				if(boost < 3)
 				boost++;
 				boostActor->OnCollided();
@@ -1307,6 +1421,7 @@ void ABattleBumperPlayer::OnOverlapBegin2(class UPrimitiveComponent* OverlappedC
 		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
+			passage = 0;
 			if (Role == ROLE_Authority && !respawning)
 			CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact,CollidedActors);
 			CollidedActors->playerAssasin = this;
@@ -1349,6 +1464,8 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 4 + 1;
+			if (!ItemGetSound->IsPlaying())
+			ItemGetSound->Play();
 			if (i == 1 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
 				ShieldCollection = true;
 			else if (i == 2 && ShieldCollection == false && MineCollection == false && SawbladeCollection == false&& GrenadeCollection == false)
@@ -1367,6 +1484,8 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Mine->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				if (!ExplosionSound->IsPlaying())
+				ExplosionSound->Play();
 				Mine->Destroy();
 			}
 			
@@ -1378,7 +1497,8 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
-
+				if (!ExplosionSound->IsPlaying())
+				ExplosionSound->Play();
 				Grenade->Destroy();
 			}
 
@@ -1399,6 +1519,8 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 
 		if (boostActor) {
 			if (boostActor->active) {
+				if (!BoostGetSound->IsPlaying())
+					BoostGetSound->Play();
 				if (boost < 3)
 				boost++;
 				boostActor->OnCollided();
@@ -1412,6 +1534,7 @@ void ABattleBumperPlayer::OnOverlapBegin3(class UPrimitiveComponent* OverlappedC
 		if (CollidedActors && CollidedActors->ShieldActivated == false  && CurrentVelocity.X != 0)
 		{
 			float v = ServerVelocity.X;
+			passage = 0;
 			if (Role == ROLE_Authority && !respawning) {
 				CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
 			}
@@ -1456,6 +1579,8 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		bool blah = Item->PlayerCollided;
 		if (Item && (Item->PlayerCollided == false)) {
 			int i = rand() % 4 + 1;
+			if (!ItemGetSound->IsPlaying())
+			ItemGetSound->Play();
 			if (i == 1 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
 				ShieldCollection = true;
 			else if (i == 2 && ShieldCollection == false && MineCollection == false && GrenadeCollection == false&& SawbladeCollection == false)
@@ -1473,6 +1598,8 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Mine->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
+				if (!ExplosionSound->IsPlaying())
+				ExplosionSound->Play();
 				Mine->Destroy();
 			}
 		
@@ -1484,7 +1611,8 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, Grenade->GetActorLocation());
 				MineCollision(SweepResult.ImpactNormal, GetActorForwardVector(), 1);
-
+				if (!ExplosionSound->IsPlaying())
+				ExplosionSound->Play();
 				Grenade->Destroy();
 			}
 
@@ -1505,6 +1633,8 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 
 		if (boostActor) {
 			if (boostActor->active) {
+				if (!BoostGetSound->IsPlaying())
+					BoostGetSound->Play();
 				if (boost < 3)
 				boost++;
 				boostActor->OnCollided();
@@ -1517,7 +1647,10 @@ void ABattleBumperPlayer::OnOverlapBegin4(class UPrimitiveComponent* OverlappedC
 		if (CollidedActors && CollidedActors->ShieldActivated == false && CurrentVelocity.X != 0)
 		{
 			float v = CurrentVelocity.X;
+			passage = 0;
 			if (Role == ROLE_Authority && !respawning) {
+				
+				
 				CollidedActors->Server_BumperCollision(SweepResult.ImpactNormal, GetActorForwardVector(), AuxImpact, CollidedActors);
 			}
 			CollidedActors->playerAssasin = this;
@@ -1679,8 +1812,12 @@ void ABattleBumperPlayer::Respawn() {
 
 void ABattleBumperPlayer::ShieldHit(FVector NImpactNormal)
 {
-	if(CurrentVelocity.X >= 0)
-	ShieldVector = NImpactNormal*5 - GetActorForwardVector();
+	if (CurrentVelocity.X >= 0)
+	{
+		
+		
+		ShieldVector = NImpactNormal * 5 - GetActorForwardVector();
+	}
 	else if(CurrentVelocity.X < 0)
 	ShieldVector = NImpactNormal * 5 + GetActorForwardVector() * 10;
 	if(ServerVelocity.X != 0)
