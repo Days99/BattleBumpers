@@ -118,6 +118,11 @@ ABattleBumperPlayer::ABattleBumperPlayer()
 	// I don't want the sound playing the moment it's created.
 	BoostGetSound->bAutoActivate = false;
 
+	//EngineSound->SetSound(EngineSoundBase);
+	SawSound = CreateDefaultSubobject<UAudioComponent>(TEXT("SawAudioComp"));
+	// I don't want the sound playing the moment it's created.
+	SawSound->bAutoActivate = false;
+
 
 	
 	bReplicates = true;
@@ -1032,7 +1037,7 @@ void ABattleBumperPlayer::Server_SpawnSawblade_Implementation(ABattleBumperPlaye
 		UWorld* world = a->GetWorld();
 		if (world)
 		{
-
+				
 				FActorSpawnParameters SpawParams;
 				SpawParams.Owner = a;
 
@@ -1101,6 +1106,7 @@ bool ABattleBumperPlayer::Server_SpawnMine_Validate(ABattleBumperPlayer* a)
 
 void ABattleBumperPlayer::DestroySawblade()
 {
+	SawSound->Stop();
 	sawbladeActor->Destroy();
 	GetWorldTimerManager().ClearTimer(SawbladeTime);
 
@@ -1116,24 +1122,33 @@ void ABattleBumperPlayer::DestroyShield()
 
 void ABattleBumperPlayer::ActivateItem()
 {
-	if(!ItemActivateSound->IsPlaying())
-	ItemActivateSound->Play();
+	
 	if(ShieldCollection==true)
 	{
+		if (!ItemActivateSound->IsPlaying())
+			ItemActivateSound->Play();
 		ActivateShield();
 		ShieldCollection = false;
 	}
 	if (MineCollection == true)
 	{
+		if (!ItemActivateSound->IsPlaying())
+			ItemActivateSound->Play();
 		Server_SpawnMine(this);
 		MineCollection = false;
 	}
 	if (GrenadeCollection == true)
 	{
+		if (!ItemActivateSound->IsPlaying())
+		ItemActivateSound->Play();
 		Server_SpawnGrenade(this);
 		GrenadeCollection = false;
 	}
 	if (SawbladeCollection == true) {
+		
+		SawSound->Play();
+		if (!ItemActivateSound->IsPlaying())
+		ItemActivateSound->Play();
 		Server_SpawnSawblade(this);
 		SawbladeCollection = false;
 		sawbladeActive = true;

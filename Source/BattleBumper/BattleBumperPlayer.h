@@ -150,6 +150,9 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
 		UAudioComponent* BoostFlameSound;
 
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PLEASEWORK")
+		UAudioComponent* SawSound;
+
 	UPROPERTY(Replicated, EditAnywhere)
 		FVector CurrentPosition;
 
